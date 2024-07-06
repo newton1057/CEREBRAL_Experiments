@@ -54,6 +54,8 @@ export default function Dashboard_Training_Simulated_Experiment({ setStep, setSt
   const [dataGraph, setDataGraph] = useState(data_default); // State to store the data of the graph
   const [selected, setSelected] = useState(null); // State to store the selected row
 
+  const [evualated, setEvualated] = useState([]); // State to store if the solution has been evaluated
+
   const [sliderDissatisfiedSatisfied, setSliderDissatisfiedSatisfied] = useState(50); // Slider of emotions Dissatisfied - Satisfied NOTE: 50 (Beetween) is the default value for the slider of emotions
   const [sliderBoredExcited, setSliderBoredExcited] = useState(50); // Slider of emotions Bored - Excited NOTE: 50 (Beetween) is the default value for the slider of emotions
 
@@ -180,8 +182,11 @@ export default function Dashboard_Training_Simulated_Experiment({ setStep, setSt
 
     setSolutionCheck(updatedSolutionCheck); // Update the array of solutions evaluated
 
+    setEvualated([...evualated, highlightedRow]); // Update the array of solutions evaluated
+
     if (highlightedRow === dataGraph.length - 1) {
       console.log('All solutions have been evaluated');
+      setEvualated([]); // Reset the array of solutions evaluated
       setLoading(true); // Show loading animation
 
       try {
@@ -205,15 +210,13 @@ export default function Dashboard_Training_Simulated_Experiment({ setStep, setSt
         title: '¡Soluciones guardadas!',
         text: 'Las soluciones han sido guardadas con éxito. ¿Deseas continuar con el experimento realizando más soluciones?',
         showCancelButton: true,
-        confirmButtonColor: "#3085d6",
-        cancelButtonColor: "#d33",
-        confirmButtonText: "Sí",
-        cancelButtonText: "No",
+        cancelButtonColor: "#1A8754",
+        confirmButtonColor: "#DC3545",
+        cancelButtonText: "Sí",
+        confirmButtonText: "No",
         allowOutsideClick: false
       }).then((result) => {
         if (result.isConfirmed) {
-          console.log('Continuar con el experimento');
-        } else {
           console.log('Finalizar el experimento');
           stopCapture();
 
@@ -230,6 +233,9 @@ export default function Dashboard_Training_Simulated_Experiment({ setStep, setSt
           updateSteps('Simulated_Experiment_Training');
           setStep('Simulated_Experiment_Assesment');
           setStepsCompleted('Simulated_Experiment_Assesment');
+
+        } else {
+          console.log('Continuar con el experimento');
         }
       }
       );
@@ -251,7 +257,7 @@ export default function Dashboard_Training_Simulated_Experiment({ setStep, setSt
       <hr />
       <div className='d-flex align-items-center' style={{ height: "-webkit-fill-available" }}>
         <div className='w-50'>
-          <Table striped bordered hover>
+          <Table bordered >
             <thead>
               <tr>
                 <th className='text-center'>Tiempo</th>
@@ -261,7 +267,7 @@ export default function Dashboard_Training_Simulated_Experiment({ setStep, setSt
             </thead>
             <tbody>
               {dataGraph.map((row, index) => (
-                <tr key={index} style={{ backgroundColor: highlightedRow === index ? '#D9FAEA' : 'white' }}>
+                <tr key={index} style={{ backgroundColor: highlightedRow === index ? '#D9FAEA' : evualated.includes(index) ? '#dedede' : 'white' }}>
                   <td className='text-center align-middle'>
                     {row.time}
                   </td>
@@ -323,9 +329,13 @@ export default function Dashboard_Training_Simulated_Experiment({ setStep, setSt
           {/* Aquí puedes agregar más contenido si es necesario */}
           {starExperiment && (
             <div>
-              <button onClick={isCapturing ? stopCapture : startCapture}>
+              {
+                /*
+                <button onClick={isCapturing ? stopCapture : startCapture}>
                 {isCapturing ? 'Stop Capture' : 'Start Capture'}
               </button>
+                */
+              }
               <video ref={videoRef} style={{ width: '100%', border: '1px solid black' }} autoPlay></video>
             </div>
           )
@@ -356,17 +366,14 @@ export default function Dashboard_Training_Simulated_Experiment({ setStep, setSt
               <RangeSlider
                 variant='warning'
                 size='lg'
-                step={25}
+                step={16}
+                max={96}
                 tooltipPlacement='top'
                 value={sliderDissatisfiedSatisfied}
                 onChange={changeEvent => setSliderDissatisfiedSatisfied(changeEvent.target.value)}
                 tooltipLabel={currentValue => {
-                  if (currentValue === 25) {
-                    return <ReactEmojis emoji='🙁' emojiStyle='2' style={{ with: "20px" }} />;
-                  } else if (currentValue === 50) {
+                  if (currentValue === 48) {
                     return <ReactEmojis emoji='😐' emojiStyle='2' style={{ with: "20px" }} />;
-                  } else if (currentValue === 75) {
-                    return <ReactEmojis emoji='🙂' emojiStyle='2' style={{ with: "20px" }} />;
                   }
 
                 }}
@@ -378,30 +385,26 @@ export default function Dashboard_Training_Simulated_Experiment({ setStep, setSt
           <hr />
           <h5 className='text-center'>Aburrido - Emocionado</h5>
           <div className='d-flex align-items-center justify-content-between'>
-            <ReactEmojis emoji='😔' emojiStyle='2' />
+            <ReactEmojis emoji='😴' emojiStyle='2' />
             <div style={{ width: "65%" }}>
               <RangeSlider
                 variant='warning'
                 size='lg'
-                step={25}
+                step={16}
+                max={96}
                 tooltipPlacement='top'
                 value={sliderBoredExcited}
                 onChange={changeEvent => setSliderBoredExcited(changeEvent.target.value)}
                 tooltipLabel={currentValue => {
-                  if (currentValue === 25) {
-                    return <ReactEmojis emoji='🙁' emojiStyle='2' style={{ with: "20px" }} />;
-                  } else if (currentValue === 50) {
+                  if (currentValue === 48) {
                     return <ReactEmojis emoji='😐' emojiStyle='2' style={{ with: "20px" }} />;
-                  } else if (currentValue === 75) {
-                    return <ReactEmojis emoji='😬' emojiStyle='2' style={{ with: "20px" }} />;
                   }
-
                 }}
                 tooltipStyle={{ background: 'transparent', width: "100px", height: "100px" }}
               />
             </div>
 
-            <ReactEmojis emoji='😳' emojiStyle='2' />
+            <ReactEmojis emoji='😮' emojiStyle='2' />
           </div>
           <hr />
           <div className='d-flex justify-content-center'>

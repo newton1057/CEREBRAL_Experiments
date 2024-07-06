@@ -244,3 +244,9 @@ tbody {
   background-color: transparent !important;
   opacity: 1 !important;
 }
+
+
+.accordion-button{
+  --bs-accordion-btn-active-icon: none !important;
+  --bs-accordion-btn-icon: none !important;
+}

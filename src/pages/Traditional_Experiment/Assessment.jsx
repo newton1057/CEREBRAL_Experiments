@@ -239,6 +239,7 @@ export default function Traditional_Experiment_Assessment({ setStep, updateSteps
     await axios.get('http://127.0.0.1:4000/API/Solutions_Experiment_Traditional')
       .then((response) => {
         const data = response.data.solutions;
+        console.log(data);
         setDataGraph(data);
         setLoading(false);
         setStartExperiment(true);
@@ -338,13 +339,16 @@ export default function Traditional_Experiment_Assessment({ setStep, updateSteps
                           style={{ backgroundColor: highlighted === index ? '#D9FAEA' : 'white' }}
                         >
                           <td className='text-center align-middle'>
-                            {row.time}
+                            {/*row.time*/}
+                            {parseFloat(row.time.toFixed(4))}
                           </td>
                           <td className='text-center align-middle'>
-                            {row.risk}
+                            {/*row.risk */}
+                            {parseFloat(row.risk.toFixed(4))}
                           </td>
                           <td className='text-center align-middle'>
-                            {row.arrival}
+                            {/*row.arrival */}
+                            {parseFloat(row.arrival.toFixed(4))}
                           </td>
                           <td className='align-middle columnOrderPreference'>
                             <Form.Select
@@ -361,12 +365,15 @@ export default function Traditional_Experiment_Assessment({ setStep, updateSteps
                         <tr key={index}>
                           <td className='text-center align-middle'>
                             {row.time}
+                            
                           </td>
                           <td className='text-center align-middle'>
-                            {row.risk}
+                            {row.risk }
+                            
                           </td>
                           <td className='text-center align-middle'>
-                            {row.arrival}
+                            {row.arrival }
+                            
                           </td>
                           <td className='align-middle'>
                             <Form.Select
@@ -429,8 +436,8 @@ export default function Traditional_Experiment_Assessment({ setStep, updateSteps
                       id: 'time',
                       label: 'Tiempo',
                       value: 'time',
-                      min: 'auto',
-                      max: 'auto',
+                      min: '0',
+                      max: '1',
                       ticksPosition: 'before',
                       legendPosition: 'start',
                       legendOffset: 20
@@ -439,8 +446,8 @@ export default function Traditional_Experiment_Assessment({ setStep, updateSteps
                       id: 'risk',
                       label: 'Riesgo',
                       value: 'risk',
-                      min: 'auto',
-                      max: 'auto',
+                      min: '0',
+                      max: '1',
                       ticksPosition: 'before',
                       legendPosition: 'start',
                       legendOffset: 20
@@ -449,8 +456,8 @@ export default function Traditional_Experiment_Assessment({ setStep, updateSteps
                       id: 'arrival',
                       label: 'Llegada',
                       value: 'arrival',
-                      min: 'auto',
-                      max: 'auto',
+                      min: '0',
+                      max: '1',
                       ticksPosition: 'before',
                       legendPosition: 'start',
                       legendOffset: 20
@@ -490,13 +497,18 @@ export default function Traditional_Experiment_Assessment({ setStep, updateSteps
                   <tbody>
                     <tr>
                       <td className='text-center align-middle'>
-                        {dataGraph[highlighted].time}
+                        {/**dataGraph[highlighted].time */}
+                        
+                        {parseFloat(dataGraph[highlighted].time.toFixed(4))}
+                        
                       </td>
                       <td className='text-center align-middle'>
-                        {dataGraph[highlighted].risk}
+                        
+                        {parseFloat(dataGraph[highlighted].risk.toFixed(4))}
                       </td>
                       <td className='text-center align-middle'>
-                        {dataGraph[highlighted].arrival}
+                        
+                        {parseFloat(dataGraph[highlighted].arrival.toFixed(4))}
                       </td>
                     </tr>
                   </tbody>
@@ -562,10 +574,16 @@ export default function Traditional_Experiment_Assessment({ setStep, updateSteps
               </div>
               <div className='w-50'>
                 <p>Visualización de la solución:</p>
-                <Button onClick={startCapture} disabled={isCapturing}>Iniciar</Button>
+                {
+                  /* 
+                   <Button onClick={startCapture} disabled={isCapturing}>Iniciar</Button>
                 <button onClick={isCapturing ? stopCapture : startCapture}>
                   {isCapturing ? 'Stop Capture' : 'Start Capture'}
                 </button>
+                  
+                  */
+                }
+
                 <video ref={videoRef} style={{ width: '100%', border: '1px solid black' }} autoPlay></video>
               </div>
 

@@ -24,7 +24,7 @@ export default function Finish({ updateSteps }) {
 
   return (
     <div className="d-flex flex-column w-100 h-100 justify-content-between">
-      <h1 className="mb-0">Finalización</h1>
+      <h1 className="mb-0">Finalizar experimento</h1>
       <hr />
       <div className='w-100 h-75 d-flex justify-content-center'>
         <ReactPlayer
@@ -62,11 +62,14 @@ export default function Finish({ updateSteps }) {
               });
 
               updateSteps('Finish');
+              sessionStorage.clear();
+              window.location.reload();
+              
             });
 
           }}
         >
-          <Check className='me-2' weight="bold" />Terminar
+          <Check className='me-2' weight="bold" />Finalizar
         </Button>
       </div>
     </div>

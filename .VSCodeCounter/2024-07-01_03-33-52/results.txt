@@ -1,0 +1,60 @@
+Date : 2024-07-01 03:33:52
+Directory : /Users/eduardoisaacdavilabernal/Desktop/CEREBRAL_Experiments/src
+Total : 23 files,  3857 codes, 146 comments, 405 blanks, all 4408 lines
+
+Languages
++----------------+------------+------------+------------+------------+------------+
+| language       | files      | code       | comment    | blank      | total      |
++----------------+------------+------------+------------+------------+------------+
+| JavaScript JSX |         18 |      3,574 |        140 |        345 |      4,059 |
+| CSS            |          2 |        256 |          6 |         60 |        322 |
+| JSON           |          2 |         26 |          0 |          0 |         26 |
+| XML            |          1 |          1 |          0 |          0 |          1 |
++----------------+------------+------------+------------+------------+------------+
+
+Directories
++----------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                                                 | files      | code       | comment    | blank      | total      |
++----------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                                                    |         23 |      3,857 |        146 |        405 |      4,408 |
+| . (Files)                                                                                                            |          4 |        559 |         10 |         76 |        645 |
+| assets                                                                                                               |          2 |          2 |          0 |          0 |          2 |
+| components                                                                                                           |          4 |        645 |         21 |         78 |        744 |
+| config                                                                                                               |          1 |         25 |          0 |          0 |         25 |
+| pages                                                                                                                |         12 |      2,626 |        115 |        251 |      2,992 |
+| pages (Files)                                                                                                        |          2 |        305 |         12 |         44 |        361 |
+| pages/Home                                                                                                           |          1 |          8 |          0 |          1 |          9 |
+| pages/Introduction                                                                                                   |          1 |         51 |          6 |          6 |         63 |
+| pages/Simulated_Experiment                                                                                           |          4 |      1,093 |         64 |        114 |      1,271 |
+| pages/Traditional_Experiment                                                                                         |          4 |      1,169 |         33 |         86 |      1,288 |
++----------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++----------------------------------------------------------------------------------------------------------------------+----------------+------------+------------+------------+------------+
+| filename                                                                                                             | language       | code       | comment    | blank      | total      |
++----------------------------------------------------------------------------------------------------------------------+----------------+------------+------------+------------+------------+
+| /Users/eduardoisaacdavilabernal/Desktop/CEREBRAL_Experiments/src/App.css                                             | CSS            |        192 |          6 |         48 |        246 |
+| /Users/eduardoisaacdavilabernal/Desktop/CEREBRAL_Experiments/src/App.jsx                                             | JavaScript JSX |        293 |          2 |         10 |        305 |
+| /Users/eduardoisaacdavilabernal/Desktop/CEREBRAL_Experiments/src/assets/AnimationLoading.json                        | JSON           |          1 |          0 |          0 |          1 |
+| /Users/eduardoisaacdavilabernal/Desktop/CEREBRAL_Experiments/src/assets/react.svg                                    | XML            |          1 |          0 |          0 |          1 |
+| /Users/eduardoisaacdavilabernal/Desktop/CEREBRAL_Experiments/src/components/Modal_Profile.jsx                        | JavaScript JSX |        450 |         15 |         47 |        512 |
+| /Users/eduardoisaacdavilabernal/Desktop/CEREBRAL_Experiments/src/components/NavBar.jsx                               | JavaScript JSX |         41 |          5 |         11 |         57 |
+| /Users/eduardoisaacdavilabernal/Desktop/CEREBRAL_Experiments/src/components/prueba.jsx                               | JavaScript JSX |         75 |          1 |          7 |         83 |
+| /Users/eduardoisaacdavilabernal/Desktop/CEREBRAL_Experiments/src/components/streeper.jsx                             | JavaScript JSX |         79 |          0 |         13 |         92 |
+| /Users/eduardoisaacdavilabernal/Desktop/CEREBRAL_Experiments/src/config/themeResponsiveParallelCoordinates.json      | JSON           |         25 |          0 |          0 |         25 |
+| /Users/eduardoisaacdavilabernal/Desktop/CEREBRAL_Experiments/src/index.css                                           | CSS            |         64 |          0 |         12 |         76 |
+| /Users/eduardoisaacdavilabernal/Desktop/CEREBRAL_Experiments/src/main.jsx                                            | JavaScript JSX |         10 |          2 |          6 |         18 |
+| /Users/eduardoisaacdavilabernal/Desktop/CEREBRAL_Experiments/src/pages/Comparison_Between_Experiments.jsx            | JavaScript JSX |        247 |          6 |         34 |        287 |
+| /Users/eduardoisaacdavilabernal/Desktop/CEREBRAL_Experiments/src/pages/Finish.jsx                                    | JavaScript JSX |         58 |          6 |         10 |         74 |
+| /Users/eduardoisaacdavilabernal/Desktop/CEREBRAL_Experiments/src/pages/Home/Home.jsx                                 | JavaScript JSX |          8 |          0 |          1 |          9 |
+| /Users/eduardoisaacdavilabernal/Desktop/CEREBRAL_Experiments/src/pages/Introduction/Introduction.jsx                 | JavaScript JSX |         51 |          6 |          6 |         63 |
+| /Users/eduardoisaacdavilabernal/Desktop/CEREBRAL_Experiments/src/pages/Simulated_Experiment/Assessment.jsx           | JavaScript JSX |        440 |         42 |         54 |        536 |
+| /Users/eduardoisaacdavilabernal/Desktop/CEREBRAL_Experiments/src/pages/Simulated_Experiment/Dashboard_Training.jsx   | JavaScript JSX |        353 |         15 |         46 |        414 |
+| /Users/eduardoisaacdavilabernal/Desktop/CEREBRAL_Experiments/src/pages/Simulated_Experiment/Quiz.jsx                 | JavaScript JSX |        247 |          1 |          7 |        255 |
+| /Users/eduardoisaacdavilabernal/Desktop/CEREBRAL_Experiments/src/pages/Simulated_Experiment/Training.jsx             | JavaScript JSX |         53 |          6 |          7 |         66 |
+| /Users/eduardoisaacdavilabernal/Desktop/CEREBRAL_Experiments/src/pages/Traditional_Experiment/Assessment.jsx         | JavaScript JSX |        516 |         19 |         52 |        587 |
+| /Users/eduardoisaacdavilabernal/Desktop/CEREBRAL_Experiments/src/pages/Traditional_Experiment/Dashboard_Training.jsx | JavaScript JSX |        355 |         12 |         19 |        386 |
+| /Users/eduardoisaacdavilabernal/Desktop/CEREBRAL_Experiments/src/pages/Traditional_Experiment/Quiz.jsx               | JavaScript JSX |        248 |          1 |          6 |        255 |
+| /Users/eduardoisaacdavilabernal/Desktop/CEREBRAL_Experiments/src/pages/Traditional_Experiment/Training.jsx           | JavaScript JSX |         50 |          1 |          9 |         60 |
+| Total                                                                                                                |                |      3,857 |        146 |        405 |      4,408 |
++----------------------------------------------------------------------------------------------------------------------+----------------+------------+------------+------------+------------+

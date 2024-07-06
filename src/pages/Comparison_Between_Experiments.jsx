@@ -9,9 +9,12 @@ import axios from "axios";
 import Lottie from "lottie-react";
 import AnimationLoading from '../assets/AnimationLoading.json';
 
+// Importing Icons
+import { Check, Prohibit, Broom } from "@phosphor-icons/react";
+
 export default function Comparison_Between_Experiments({ setStep, updateSteps, setStepsCompleted }) {
   const [validated, setValidated] = useState(false);
-  const [radioValue, setRadioValue] = useState('2');
+  const [radioValue, setRadioValue] = useState('1');
   const [loading, setLoading] = useState(false);
 
   const videoRef1 = useRef(null); // Reference to the video element to capture the screen
@@ -81,7 +84,7 @@ export default function Comparison_Between_Experiments({ setStep, updateSteps, s
 
       console.log(data);
 
-      await axios.post ('http://127.0.0.1:4000/API/SaveQuiz_Beetween_Experiments', {
+      await axios.post('http://127.0.0.1:4000/API/SaveQuiz_Beetween_Experiments', {
         email: JSON.parse(sessionStorage.getItem('profile')).email,
         data: data,
       }).then((response) => {
@@ -91,10 +94,11 @@ export default function Comparison_Between_Experiments({ setStep, updateSteps, s
       });
 
       Swal.fire({
+        icon: 'success',
         title: 'Cuestionario completado',
         text: 'Gracias por completar el cuestionario.',
         width: '50%',
-        confirmButtonText: "Finalizar experimento",
+        confirmButtonText: "OK",
         confirmButtonColor: "#198754",
         allowOutsideClick: false,
       }).then((result) => {
@@ -117,20 +121,28 @@ export default function Comparison_Between_Experiments({ setStep, updateSteps, s
     setValidated(true);
   };
 
+  const handleReset = () => {
+    setValidated(false);
+    setRadioValue('1');
+    if (videoRef.current) {
+      videoRef.current.currentTime = 0;
+    }
+    document.getElementById('comparisonForm').reset();
+  };
 
   const videoRef = useRef(null);
 
 
   useEffect(() => {
     const fetchData = async () => {
-      
+
 
       setLoading(true);
 
       try {
         const response = await axios.post('http://127.0.0.1:4000/API/GetVideo', {
           email: JSON.parse(sessionStorage.getItem('profile')).email,
-          
+
         }, {
           responseType: 'blob' // Importante para recibir datos binarios
         });
@@ -166,14 +178,14 @@ export default function Comparison_Between_Experiments({ setStep, updateSteps, s
     };
   }, []);
 
-  
+
   return (
     <>
       <div className='w-100 h-100 d-flex flex-column'>
         <h1>Comparación entre experimentos</h1>
         <hr />
         <div className="ps-5 pe-5">
-          <Form noValidate validated={validated} onSubmit={handleSubmit}>
+          <Form id="comparisonForm" noValidate validated={validated} onSubmit={handleSubmit}>
             <Row className="mb-3">
               <Form.Group>
                 <FloatingLabel controlId="floatingSelect" label="El problema fue fácil de entender.*">
@@ -222,19 +234,30 @@ export default function Comparison_Between_Experiments({ setStep, updateSteps, s
             <hr />
             <div>
               <p>¿Cuál solución te gustó más?*</p>
-              <button onClick={isCapturing ? stopCapture : startCapture}>
-                  {isCapturing ? 'Stop Capture' : 'Start Capture'}
-                </button>
+              {
+                /*
+                <button onClick={isCapturing ? stopCapture : startCapture}>
+                {isCapturing ? 'Stop Capture' : 'Start Capture'}
+              </button>
+                */
+              }
+
               <div className="mb-3 w-100 d-flex flex-row">
                 <ToggleButton
                   className="w-50 p-4"
                   key='1'
                   type="radio"
-                  variant={radioValue === '1' ? 'outline-success' : 'outline-danger'}
+                  variant={radioValue === '1' ? 'outline-dark' : 'outline-dark'}
                   name="radio"
                   value="1"
                   checked={radioValue === '1'}
-                  onClick={(e) => setRadioValue('1')}
+                  onClick={(e) => {
+                    setRadioValue('1');
+                    if (videoRef.current) {
+                      videoRef.current.currentTime = 0; // Reiniciar el tiempo del video
+                      videoRef.current.play(); // Reproducir el video
+                    }
+                  }}
                 >
                   <h6><b>Método de gráfica de líneas</b></h6>
                   <video className="w-100" ref={videoRef} autoPlay loop></video>
@@ -243,16 +266,37 @@ export default function Comparison_Between_Experiments({ setStep, updateSteps, s
                   key='2'
                   className="w-50 p-4"
                   type="radio"
-                  variant={radioValue === '2' ? 'outline-success' : 'outline-danger'}
+                  variant={radioValue === '2' ? 'outline-dark' : 'outline-dark'}
                   name="radio"
                   value="2"
                   checked={radioValue === '2'}
-                  onClick={(e) => setRadioValue('2')}
+                  onClick={(e) => {
+                    setRadioValue('2');
+                    console.log('Reset simulation');
+                  }}
                 >
                   <h6><b>Método de simulación</b></h6>
                   <video ref={videoRef1} style={{ width: '100%', border: '1px solid black' }} autoPlay></video>
                 </ToggleButton>
 
+              </div>
+              <div className="mb-3 w-100 d-flex flex-row justify-content-around">
+                <Form.Check
+                  inline
+                  required
+                  label="Método de gráfica de líneas"
+                  name="SolutionMethod"
+                  type='radio'
+                  value='GraphicLines'
+                />
+                <Form.Check
+                  inline
+                  required
+                  label="Método de simulación"
+                  name="SolutionMethod"
+                  type='radio'
+                  value='Simulation'
+                />
               </div>
               <Row className="mb-3">
                 <Form.Group controlId="validationCustom01">
@@ -269,9 +313,10 @@ export default function Comparison_Between_Experiments({ setStep, updateSteps, s
             </div>
 
             <hr />
-            <div className='d-flex justify-content-end gap-4'>
-
-              <Button variant="success" type="submit">Siguiente</Button>
+            <div className='d-flex justify-content-end gap-4 mb-5'>
+              <Button className="d-flex align-items-center" variant="danger" 
+              onClick={handleReset} ><Broom className="me-2" weight="bold" />Limpiar cuestionario</Button>
+              <Button className="d-flex align-items-center" variant="success" type="submit"><Check className="me-2" weight="bold" />Listo</Button>
             </div>
           </Form>
         </div>

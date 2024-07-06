@@ -196,13 +196,16 @@ export default function Dashboard_Training({ setStepLevel, updateSteps, setStep,
                     style={{ backgroundColor: highlighted === index ? '#D9FAEA' : 'white' }}
                   >
                     <td className='text-center align-middle'>
-                      {row.time}
+                      {/*row.time*/}
+                      {parseFloat(row.time.toFixed(4))}
                     </td>
                     <td className='text-center align-middle'>
-                      {row.risk}
+                      {/*row.risk */}
+                      {parseFloat(row.risk.toFixed(4))}
                     </td>
                     <td className='text-center align-middle'>
-                      {row.arrival}
+                      {/*row.arrival */}
+                      {parseFloat(row.arrival.toFixed(4))}
                     </td>
                     <td className='columnOrderPreference align-middle'>
                       <Form.Select
@@ -341,8 +344,8 @@ export default function Dashboard_Training({ setStepLevel, updateSteps, setStep,
                 id: 'time',
                 label: 'Tiempo',
                 value: 'time',
-                min: 'auto',
-                max: 'auto',
+                min: '0',
+                max: '1',
                 ticksPosition: 'before',
                 legendPosition: 'start',
                 legendOffset: 20
@@ -351,8 +354,8 @@ export default function Dashboard_Training({ setStepLevel, updateSteps, setStep,
                 id: 'risk',
                 label: 'Riesgo',
                 value: 'risk',
-                min: 'auto',
-                max: 'auto',
+                min: '0',
+                max: '1',
                 ticksPosition: 'before',
                 legendPosition: 'start',
                 legendOffset: 20
@@ -361,8 +364,8 @@ export default function Dashboard_Training({ setStepLevel, updateSteps, setStep,
                 id: 'arrival',
                 label: 'Llegada',
                 value: 'arrival',
-                min: 'auto',
-                max: 'auto',
+                min: '0',
+                max: '1',
                 ticksPosition: 'before',
                 legendPosition: 'start',
                 legendOffset: 20
