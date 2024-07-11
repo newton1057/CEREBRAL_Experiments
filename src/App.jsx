@@ -107,8 +107,7 @@ export default function App() {
                   <Accordion.Item eventKey="0">
                     <Accordion.Header onClick={(e) => {
                       e.preventDefault();
-                      e.stopPropagation();
-                      
+                      e.stopPropagation();                      
                     }}
                     aria-disabled='true'
                     aria-expanded='false'>
