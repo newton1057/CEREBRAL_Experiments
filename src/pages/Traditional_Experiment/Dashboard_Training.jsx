@@ -97,7 +97,7 @@ export default function Dashboard_Training({ setStepLevel, updateSteps, setStep,
   const getSolutions = async () => {
     setLoading(true);
 
-    await axios.get('http://127.0.0.1:4000/API/Solutions_Experiment_Traditional')
+    await axios.post('http://127.0.0.1:4000/API/Solutions_Experiment_Traditional')
       .then((response) => {
         const data = response.data.solutions;
         setDataGraph(data);
@@ -107,7 +107,6 @@ export default function Dashboard_Training({ setStepLevel, updateSteps, setStep,
       .catch((error) => {
         console.log(error);
       });
-
   }
 
   const updateSolutions = async () => {
@@ -123,8 +122,24 @@ export default function Dashboard_Training({ setStepLevel, updateSteps, setStep,
         allowOutsideClick: false
       });
     } else {
+      var data = [...dataGraph];
+      var bestSolution = {};
+
+      for (let i = 0; i < selected.length; i++) {
+        data[i].order = Number(selected[i]);
+        if (selected[i] === '1') {
+          bestSolution = data[i];
+        }
+      }
+
       setLoading(true);
-      await axios.get('http://127.0.0.1:4000/API/Solutions_Experiment_Traditional')
+
+      await axios.post('http://127.0.0.1:4000/API/Solutions_Experiment_Traditional', {
+        email: JSON.parse(sessionStorage.getItem('profile')).email,
+        bestSolution: bestSolution,
+        orderSolutions: data,
+        storagePOS: 0
+      })
         .then((response) => {
           const data = response.data.solutions;
           setDataGraph(data);
@@ -136,6 +151,8 @@ export default function Dashboard_Training({ setStepLevel, updateSteps, setStep,
         .catch((error) => {
           console.log(error);
         });
+        
+
     }
   }
 
