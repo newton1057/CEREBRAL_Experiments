@@ -70,10 +70,12 @@ export default function App() {
     <>
       <div className='App d-flex flex-column' style={{ height: "100vh" }}>
         <NavBar showModalProfile={showModalProfile} handleCloseModalProfile={handleCloseModalProfile} handleShowModalProfile={handleShowModalProfile} logged={logged} setLogged={setLogged} setStep={setStep} updateSteps={updateSteps} setStepsCompleted={updateStepsCompleted} />
-        <div className="d-flex" style={{ height: "90%" }}>
+        <div className="d-flex" style={{ height: step == '' ? '100%' : '90%' }}>
           {step !== '' &&
             <>
-              <div className='SideBar d-flex flex-column w-25 p-3 gap-3 position-relative'>
+              <div 
+                className='SideBar d-flex flex-column p-3 gap-3 position-relative'
+                style={{width: '20%'}}>
                 <hr style={{
                   width: '640px',
                   margin: '10px 0px 10px 25px',
@@ -103,6 +105,27 @@ export default function App() {
                   }
                   Introducción
                 </Button>
+                
+                <Button
+                  className='d-flex align-items-center w-100 gap-3 text-start z-3'
+                  variant="light"
+                >
+                  {steps.includes('Traditional_Experiment_Training') & steps.includes('Traditional_Experiment_Assessment') & steps.includes('Traditional_Experiment_Quiz') & steps.includes('Simulated_Experiment_Training') & steps.includes('Simulated_Experiment_Assesment') & steps.includes('Simulated_Experiment_Quiz') ?
+                        <>
+                          <div className='Indicator-Step-Success'>
+                            <Check weight="bold" />
+                          </div>
+                        </>
+                        :
+                        <>
+                          <div className='Indicator-Step'>
+                            <ExclamationMark weight="bold" />
+                          </div>
+                        </>
+                      }
+                      Experimentos
+                </Button>
+
                 <Accordion defaultActiveKey="0" alwaysOpen>
                   <Accordion.Item eventKey="0">
                     <Accordion.Header onClick={(e) => {
@@ -110,7 +133,9 @@ export default function App() {
                       e.stopPropagation();                      
                     }}
                     aria-disabled='true'
-                    aria-expanded='false'>
+                    aria-expanded='false'
+                    style={{display: 'none'}}
+                    >
                       {steps.includes('Traditional_Experiment_Training') & steps.includes('Traditional_Experiment_Assessment') & steps.includes('Traditional_Experiment_Quiz') & steps.includes('Simulated_Experiment_Training') & steps.includes('Simulated_Experiment_Assesment') & steps.includes('Simulated_Experiment_Quiz') ?
                         <>
                           <div className='Indicator-Step-Success'>

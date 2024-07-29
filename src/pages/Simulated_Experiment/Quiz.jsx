@@ -7,10 +7,15 @@ import Swal from 'sweetalert2';
 import axios from 'axios';
 
 // Importing Icons
-import { Check } from "@phosphor-icons/react";
+import { Check, Broom } from "@phosphor-icons/react";
 
-export default function Simulated_Experiment_Quiz({setStep,updateSteps, setStepsCompleted}) {
+export default function Simulated_Experiment_Quiz({ setStep, updateSteps, setStepsCompleted }) {
   const [validated, setValidated] = useState(false);
+
+  const handleReset = () => {
+    setValidated(false);
+    document.getElementById('quizSimulatedExperiment').reset();
+  };
 
   const handleSubmit = async (event) => {
     const form = event.currentTarget;
@@ -27,7 +32,7 @@ export default function Simulated_Experiment_Quiz({setStep,updateSteps, setSteps
       sessionStorage.setItem('Simulated_Experiment', JSON.stringify(data));
 
       await axios.post('http://127.0.0.1:4000/API/Quiz_Experiment_Simulated', {
-        email: 'newton1057@gmail.com', 
+        email: 'newton1057@gmail.com',
         data: data
       }).then((response) => {
         console.log(response.data);
@@ -39,13 +44,13 @@ export default function Simulated_Experiment_Quiz({setStep,updateSteps, setSteps
           confirmButtonColor: "#198754",
           confirmButtonText: "Siguiente",
           allowOutsideClick: false,
-        }).then( (result) => {
+        }).then((result) => {
           console.log('result', result);
           setStep('Comparison_Between_Experiments');
           updateSteps('Simulated_Experiment_Quiz');
           setStepsCompleted('Comparison_Between_Experiments');
 
-          axios.post('http://127.0.0.1:4000/API/UpdatePhase',{
+          axios.post('http://127.0.0.1:4000/API/UpdatePhase', {
             email: JSON.parse(sessionStorage.getItem('profile')).email,
             phase: 'Simulated_Experiment_Quiz',
             phase_completed: 'Comparison_Between_Experiments'
@@ -65,9 +70,9 @@ export default function Simulated_Experiment_Quiz({setStep,updateSteps, setSteps
 
   return (
     <div>
-      <h1>Cuestionario - Experimento Tradicional</h1>
+      <h1>Cuestionario - Experimento Simulado</h1>
       <div className="mt-5 ps-5 pe-5">
-        <Form noValidate validated={validated} onSubmit={handleSubmit}>
+        <Form id="quizSimulatedExperiment" noValidate validated={validated} onSubmit={handleSubmit}>
           <Row className="mb-3">
             <Form.Group>
               <FloatingLabel controlId="floatingSelect" label="Se requirió mucha actividad mental (e.g., pensar, decidir, o recordar).*">
@@ -240,6 +245,12 @@ export default function Simulated_Experiment_Quiz({setStep,updateSteps, setSteps
           </Row>
           <hr />
           <div className='d-flex justify-content-end gap-4'>
+            <Button
+              className="d-flex align-items-center" variant="danger"
+              onClick={handleReset}
+            >
+              <Broom className="me-2" weight="bold" />Limpiar cuestionario
+            </Button>
             <Button
               className="d-flex align-items-center"
               variant="success"

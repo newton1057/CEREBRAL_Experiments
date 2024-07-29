@@ -88,6 +88,14 @@ export default function Traditional_Experiment_Assessment({ setStep, updateSteps
   const playbackVideoRef = useRef(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState(null);
+  const [startSimulation, setStartSimulation] = useState(false);
+
+  const [valueStartTime, setValueStartTime] = useState(0);
+  const [valueEndTime, setValueEndTime] = useState(1);
+  const [valueStartRisk, setValueStartRisk] = useState(0);
+  const [valueEndRisk, setValueEndRisk] = useState(1);
+  const [valueStartArrival, setValueStartArrival] = useState(0);
+  const [valueEndArrival, setValueEndArrival] = useState(1);
 
   useEffect(() => {
     return () => {
@@ -124,6 +132,7 @@ export default function Traditional_Experiment_Assessment({ setStep, updateSteps
         // Maneja la respuesta del mediaStream y la API aquí
         const data = await apiResponse.json();
 
+
         if (videoRef.current) {
           console.log('Setting video stream source');
           videoRef.current.srcObject = mediaStream;
@@ -156,6 +165,26 @@ export default function Traditional_Experiment_Assessment({ setStep, updateSteps
         recorder.start();
 
         console.log('Capture started');
+
+        var Data_Simulation = {
+          idParetoReal: dataGraph[highlighted].ids_pareto_real,
+          numIndReal: dataGraph[highlighted].nums_ind_real
+        }
+
+        console.log(Data_Simulation);
+
+        setStartSimulation(true);
+
+        await axios.post("http://127.0.0.1:4000/API/InitSimulation", {
+          idParetoReal: 'optimized-50',
+          numIndReal: 10
+        }).then((response) => {
+          const data = response.data;
+          console.log(data);
+          setStartSimulation(false);
+        })
+
+
       } catch (error) {
         console.error('Error:', error);
       }
@@ -236,10 +265,31 @@ export default function Traditional_Experiment_Assessment({ setStep, updateSteps
 
   const getSolutions = async () => {
     setLoading(true);
-    await axios.get('http://127.0.0.1:4000/API/Solutions_Experiment_Traditional')
+    await axios.post('http://127.0.0.1:4000/API/Solutions_Experiment_Traditional')
       .then((response) => {
         const data = response.data.solutions;
         console.log(data);
+
+        var valuesTime = [];
+        var valuesRisk = [];
+        var valuesArrival = [];
+
+        data.forEach((element) => {
+          console.log(element);
+          valuesTime.push(Number(element.time));
+          valuesRisk.push(Number(element.risk));
+          valuesArrival.push(Number(element.arrival));
+        });
+
+        setValueStartTime(Math.min(...valuesTime) - 0.005);
+        setValueEndTime(Math.max(...valuesTime) + 0.005);
+
+        setValueStartRisk(Math.min(...valuesRisk) - 0.005);
+        setValueEndRisk(Math.max(...valuesRisk) + 0.005);
+
+        setValueStartArrival(Math.min(...valuesArrival) - 0.005);
+        setValueEndArrival(Math.max(...valuesArrival) + 0.005);
+
         setDataGraph(data);
         setLoading(false);
         setStartExperiment(true);
@@ -263,10 +313,46 @@ export default function Traditional_Experiment_Assessment({ setStep, updateSteps
         confirmButtonText: "OK"
       });
     } else {
+      var data = [...dataGraph];
+      var bestSolution = {};
+
+      for (let i = 0; i < selected.length; i++) {
+        data[i].order = Number(selected[i]);
+        if (selected[i] == '1') {
+          bestSolution = data[i];
+        }
+      }
+
       setLoading(true);
-      await axios.get('http://127.0.0.1:4000/API/Solutions_Experiment_Traditional')
+
+      await axios.post('http://127.0.0.1:4000/API/Solutions_Experiment_Traditional', {
+        email: JSON.parse(sessionStorage.getItem('profile')).email,
+        bestSolution: bestSolution,
+        orderSolutions: data,
+        storagePOS: 0
+      })
         .then((response) => {
           const data = response.data.solutions;
+          var valuesTime = [];
+          var valuesRisk = [];
+          var valuesArrival = [];
+
+          data.forEach((element) => {
+            console.log(element);
+            valuesTime.push(Number(element.time));
+            valuesRisk.push(Number(element.risk));
+            valuesArrival.push(Number(element.arrival));
+          });
+
+          setValueStartTime(Math.min(...valuesTime) - 0.005);
+          setValueEndTime(Math.max(...valuesTime) + 0.005);
+
+          setValueStartRisk(Math.min(...valuesRisk) - 0.005);
+          setValueEndRisk(Math.max(...valuesRisk) + 0.005);
+
+          setValueStartArrival(Math.min(...valuesArrival) - 0.005);
+          setValueEndArrival(Math.max(...valuesArrival) + 0.005);
+
           setDataGraph(data);
           setSelections([null, null, null, null]);
           setColors(data_default.map(row => row.color));
@@ -301,7 +387,7 @@ export default function Traditional_Experiment_Assessment({ setStep, updateSteps
             <hr />
             <div className='d-flex align-items-center mt-5' style={{ height: "-webkit-fill-available" }}>
               <div className='w-50'>
-                <Table striped bordered hover>
+                <Table bordered hover>
                   <thead>
                     <tr>
                       <th className='text-center'>Tiempo</th>
@@ -365,15 +451,15 @@ export default function Traditional_Experiment_Assessment({ setStep, updateSteps
                         <tr key={index}>
                           <td className='text-center align-middle'>
                             {row.time}
-                            
+
                           </td>
                           <td className='text-center align-middle'>
-                            {row.risk }
-                            
+                            {row.risk}
+
                           </td>
                           <td className='text-center align-middle'>
-                            {row.arrival }
-                            
+                            {row.arrival}
+
                           </td>
                           <td className='align-middle'>
                             <Form.Select
@@ -436,8 +522,8 @@ export default function Traditional_Experiment_Assessment({ setStep, updateSteps
                       id: 'time',
                       label: 'Tiempo',
                       value: 'time',
-                      min: '0',
-                      max: '1',
+                      min: valueStartTime,
+                      max: valueEndTime,
                       ticksPosition: 'before',
                       legendPosition: 'start',
                       legendOffset: 20
@@ -446,8 +532,8 @@ export default function Traditional_Experiment_Assessment({ setStep, updateSteps
                       id: 'risk',
                       label: 'Riesgo',
                       value: 'risk',
-                      min: '0',
-                      max: '1',
+                      min: valueStartRisk,
+                      max: valueEndRisk,
                       ticksPosition: 'before',
                       legendPosition: 'start',
                       legendOffset: 20
@@ -456,11 +542,12 @@ export default function Traditional_Experiment_Assessment({ setStep, updateSteps
                       id: 'arrival',
                       label: 'Llegada',
                       value: 'arrival',
-                      min: '0',
-                      max: '1',
+                      min: valueStartArrival,
+                      max: valueEndArrival,
                       ticksPosition: 'before',
                       legendPosition: 'start',
-                      legendOffset: 20
+                      legendOffset: 20,
+                      
                     }
                   ]}
                   margin={{ top: 20, right: 50, bottom: 20, left: 50 }}
@@ -498,16 +585,16 @@ export default function Traditional_Experiment_Assessment({ setStep, updateSteps
                     <tr>
                       <td className='text-center align-middle'>
                         {/**dataGraph[highlighted].time */}
-                        
+
                         {parseFloat(dataGraph[highlighted].time.toFixed(4))}
-                        
+
                       </td>
                       <td className='text-center align-middle'>
-                        
+
                         {parseFloat(dataGraph[highlighted].risk.toFixed(4))}
                       </td>
                       <td className='text-center align-middle'>
-                        
+
                         {parseFloat(dataGraph[highlighted].arrival.toFixed(4))}
                       </td>
                     </tr>
@@ -519,8 +606,19 @@ export default function Traditional_Experiment_Assessment({ setStep, updateSteps
                     className="d-flex align-items-center"
                     variant="warning"
                     onClick={() => {
-                      stopCapture();
-                      setStepLevel('');
+                      if (startSimulation) {
+                        Swal.fire({
+                          title: 'Simulación corriendo',
+                          text: 'La simulación esta en proceso',
+                          icon: 'error',
+                          confirmButtonColor: "#198754",
+                          confirmButtonText: "Aceptar"
+                        })
+                      } else {
+                        stopCapture();
+                        setStepLevel('');
+                      }
+
                     }}>
                     <ArrowCounterClockwise className="me-1" weight="bold" />Repetir experimento
                   </Button>
@@ -528,43 +626,55 @@ export default function Traditional_Experiment_Assessment({ setStep, updateSteps
                     className='d-flex align-items-center'
                     variant="success"
                     onClick={() => {
-                      Swal.fire({
-                        title: 'Experimento completado',
-                        text: '¡Has completado el experimento exitosamente!',
-                        icon: 'success',
-                        confirmButtonColor: "#198754",
-                        confirmButtonText: "Siguiente"
-                      }).then(async (result) => {
-                        console.log('Experimento completado');
-                        console.log(dataGraph[highlighted]);
-                        await axios.post('http://127.0.0.1:4000/API/SaveSolution_Experiment_Traditional', {
-                          email: JSON.parse(sessionStorage.getItem('profile')).email,
-                          solution: dataGraph[highlighted]
-                        }).then((response) => {
-                          console.log(response.data);
-                        }
-                        ).catch((error) => {
-                          console.log(error);
-                        });
-
-                        setStep('Traditional_Experiment_Quiz');
-                        updateSteps('Traditional_Experiment_Assessment');
-                        setStepsCompleted('Traditional_Experiment_Quiz');
-
-                        await axios.post('http://127.0.0.1:4000/API/UpdatePhase', {
-                          email: JSON.parse(sessionStorage.getItem('profile')).email,
-                          phase: 'Traditional_Experiment_Assessment',
-                          phase_completed: 'Traditional_Experiment_Quiz'
-
-                        }).then((response) => {
-                          console.log(response.data);
-                        }
-                        ).catch((error) => {
-                          console.log(error);
-                        });
-
+                      if (startSimulation) {
+                        Swal.fire({
+                          title: 'Simulación corriendo',
+                          text: 'La simulación esta en proceso',
+                          icon: 'error',
+                          confirmButtonColor: "#198754",
+                          confirmButtonText: "Aceptar"
+                        })
+                      } else {
                         stopCapture();
-                      });
+                        Swal.fire({
+                          title: 'Experimento completado',
+                          text: '¡Has completado el experimento exitosamente!',
+                          icon: 'success',
+                          confirmButtonColor: "#198754",
+                          confirmButtonText: "Siguiente"
+                        }).then(async (result) => {
+                          console.log('Experimento completado');
+                          console.log(dataGraph[highlighted]);
+                          await axios.post('http://127.0.0.1:4000/API/SaveSolution_Experiment_Traditional', {
+                            email: JSON.parse(sessionStorage.getItem('profile')).email,
+                            solution: dataGraph[highlighted]
+                          }).then((response) => {
+                            console.log(response.data);
+                          }
+                          ).catch((error) => {
+                            console.log(error);
+                          });
+
+                          setStep('Traditional_Experiment_Quiz');
+                          updateSteps('Traditional_Experiment_Assessment');
+                          setStepsCompleted('Traditional_Experiment_Quiz');
+
+                          await axios.post('http://127.0.0.1:4000/API/UpdatePhase', {
+                            email: JSON.parse(sessionStorage.getItem('profile')).email,
+                            phase: 'Traditional_Experiment_Assessment',
+                            phase_completed: 'Traditional_Experiment_Quiz'
+
+                          }).then((response) => {
+                            console.log(response.data);
+                          }
+                          ).catch((error) => {
+                            console.log(error);
+                          });
+
+                          stopCapture();
+                        });
+                      }
+
                       //setStepLevel('')
                     }}
                   >

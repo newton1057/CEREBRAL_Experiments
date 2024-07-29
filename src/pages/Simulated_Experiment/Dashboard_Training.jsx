@@ -67,6 +67,8 @@ export default function Dashboard_Training_Simulated_Experiment({ setStep, setSt
   const videoRef = useRef(null); // Reference to the video element to capture the screen
   const [isCapturing, setIsCapturing] = useState(false); // State to capture the screen 
 
+  const [startSimulation, setStartSimulation] = useState(false);
+
   const startCapture = async () => {
     try {
       // Options for the getDisplayMedia() method
@@ -120,14 +122,23 @@ export default function Dashboard_Training_Simulated_Experiment({ setStep, setSt
     console.log('Sending simulation to the backend ROS');
     console.log(dataGraph[highlightedRow]);
     const data = dataGraph[highlightedRow];
+    setStartSimulation(true);
     try {
       const response = await axios.post('http://127.0.0.1:4000/API/InitSimulation', {
-        id: data.id,
-        time: data.time,
-        risk: data.risk,
-        arrival: data.arrival
+        idParetoReal: data.ids_pareto_real,
+        numIndReal: data.nums_ind_real
       });
       console.log('Simulation sent to the backend ROS:', response.data);
+      setStartSimulation(false);
+      Swal.fire({
+        icon: 'success',
+        title: '¡Simulación terminada!',
+        text: 'La simulación a terminado',
+        confirmButtonColor: "#1A8754",
+        confirmButtonText: "Siguiente",
+        allowOutsideClick: false
+      });
+
     } catch (error) {
       console.error('Error sending simulation:', error);
     }
@@ -269,13 +280,16 @@ export default function Dashboard_Training_Simulated_Experiment({ setStep, setSt
               {dataGraph.map((row, index) => (
                 <tr key={index} style={{ backgroundColor: highlightedRow === index ? '#D9FAEA' : evualated.includes(index) ? '#dedede' : 'white' }}>
                   <td className='text-center align-middle'>
-                    {row.time}
+                    {/*row.time*/}
+                    {parseFloat(row.time.toFixed(4))}
                   </td>
                   <td className='text-center align-middle'>
-                    {row.risk}
+                    {/*row.risk */}
+                    {parseFloat(row.risk.toFixed(4))}
                   </td>
                   <td className='text-center align-middle'>
-                    {row.arrival}
+                    {/*row.arrival */}
+                    {parseFloat(row.arrival.toFixed(4))}
                   </td>
                 </tr>
               ))}
@@ -305,7 +319,25 @@ export default function Dashboard_Training_Simulated_Experiment({ setStep, setSt
 
             {starExperiment ?
               <>
-                <Button className='d-flex align-items-center' variant='success' onClick={() => setShowModalEmotion(true)} ><Check className='me-2' weight="bold" />Evaluar solución</Button>
+                <Button className='d-flex align-items-center' variant='success' 
+                onClick={() => {
+                  if (startSimulation){
+                    Swal.fire({
+                      icon: 'error',
+                      title: '¡Simulación en proceso!',
+                      text: 'La simulación no ha terminado',
+                      confirmButtonColor: "#1A8754",
+                      confirmButtonText: "Aceptar",
+                      allowOutsideClick: false
+                    });
+                  } else {
+                    setShowModalEmotion(true)
+                  }
+                  
+                }
+                  } >
+                  <Check className='me-2' weight="bold" />Evaluar solución
+                  </Button>
               </>
               :
               <>
@@ -357,7 +389,7 @@ export default function Dashboard_Training_Simulated_Experiment({ setStep, setSt
           <Modal.Title>Evaluar solución</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <h4 className='text-center'>¿Qué emoción identificaste al ver el video?</h4>
+          <h4 className='text-center'>¿Qué emoción sentiste al ver el robot?</h4>
           <hr />
           <h5 className='text-center'>Insatisfecho - Satisfecho</h5>
           <div className='d-flex align-items-center justify-content-between'>
@@ -372,8 +404,12 @@ export default function Dashboard_Training_Simulated_Experiment({ setStep, setSt
                 value={sliderDissatisfiedSatisfied}
                 onChange={changeEvent => setSliderDissatisfiedSatisfied(changeEvent.target.value)}
                 tooltipLabel={currentValue => {
-                  if (currentValue === 48) {
+                  if (currentValue === 25) {
+                    return <ReactEmojis emoji='🙁' emojiStyle='2' style={{ with: "20px" }} />;
+                  } else if (currentValue === 50) {
                     return <ReactEmojis emoji='😐' emojiStyle='2' style={{ with: "20px" }} />;
+                  } else if (currentValue === 75) {
+                    return <ReactEmojis emoji='🙂' emojiStyle='2' style={{ with: "20px" }} />;
                   }
 
                 }}
@@ -396,9 +432,14 @@ export default function Dashboard_Training_Simulated_Experiment({ setStep, setSt
                 value={sliderBoredExcited}
                 onChange={changeEvent => setSliderBoredExcited(changeEvent.target.value)}
                 tooltipLabel={currentValue => {
-                  if (currentValue === 48) {
+                  if (currentValue === 25) {
+                    return <ReactEmojis emoji='🙁' emojiStyle='2' style={{ with: "20px" }} />;
+                  } else if (currentValue === 50) {
                     return <ReactEmojis emoji='😐' emojiStyle='2' style={{ with: "20px" }} />;
+                  } else if (currentValue === 75) {
+                    return <ReactEmojis emoji='😬' emojiStyle='2' style={{ with: "20px" }} />;
                   }
+
                 }}
                 tooltipStyle={{ background: 'transparent', width: "100px", height: "100px" }}
               />

@@ -94,12 +94,40 @@ export default function Dashboard_Training({ setStepLevel, updateSteps, setStep,
 
   const [dataGraph, setDataGraph] = useState(data_default);
 
+  const [valueStartTime, setValueStartTime] = useState(0);
+  const [valueEndTime, setValueEndTime] = useState(1);
+  const [valueStartRisk, setValueStartRisk] = useState(0);
+  const [valueEndRisk, setValueEndRisk] = useState(1);
+  const [valueStartArrival, setValueStartArrival] = useState(0);
+  const [valueEndArrival, setValueEndArrival] = useState(1);
+
   const getSolutions = async () => {
     setLoading(true);
 
     await axios.post('http://127.0.0.1:4000/API/Solutions_Experiment_Traditional')
       .then((response) => {
         const data = response.data.solutions;
+
+        var valuesTime = [];
+        var valuesRisk = [];
+        var valuesArrival = [];
+
+        data.forEach((element) => {
+          console.log(element);
+          valuesTime.push(Number(element.time));
+          valuesRisk.push(Number(element.risk));
+          valuesArrival.push(Number(element.arrival));
+        });
+
+        setValueStartTime(Math.min(...valuesTime) - 0.005);
+        setValueEndTime(Math.max(...valuesTime) + 0.005);
+
+        setValueStartRisk(Math.min(...valuesRisk) - 0.005);
+        setValueEndRisk(Math.max(...valuesRisk) + 0.005);
+
+        setValueStartArrival(Math.min(...valuesArrival) - 0.005);
+        setValueEndArrival(Math.max(...valuesArrival) + 0.005);
+
         setDataGraph(data);
         setLoading(false);
         setStartExperiment(true);
@@ -142,6 +170,26 @@ export default function Dashboard_Training({ setStepLevel, updateSteps, setStep,
       })
         .then((response) => {
           const data = response.data.solutions;
+          var valuesTime = [];
+          var valuesRisk = [];
+          var valuesArrival = [];
+
+          data.forEach((element) => {
+            console.log(element);
+            valuesTime.push(Number(element.time));
+            valuesRisk.push(Number(element.risk));
+            valuesArrival.push(Number(element.arrival));
+          });
+
+          setValueStartTime(Math.min(...valuesTime) - 0.005);
+          setValueEndTime(Math.max(...valuesTime) + 0.005);
+
+          setValueStartRisk(Math.min(...valuesRisk) - 0.005);
+          setValueEndRisk(Math.max(...valuesRisk) + 0.005);
+
+          setValueStartArrival(Math.min(...valuesArrival) - 0.005);
+          setValueEndArrival(Math.max(...valuesArrival) + 0.005);
+
           setDataGraph(data);
           setSelections([null, null, null, null]);
           setColors(data_default.map(row => row.color));
@@ -151,7 +199,7 @@ export default function Dashboard_Training({ setStepLevel, updateSteps, setStep,
         .catch((error) => {
           console.log(error);
         });
-        
+
 
     }
   }
@@ -361,8 +409,8 @@ export default function Dashboard_Training({ setStepLevel, updateSteps, setStep,
                 id: 'time',
                 label: 'Tiempo',
                 value: 'time',
-                min: '0',
-                max: '1',
+                min: valueStartTime,
+                max: valueEndTime,
                 ticksPosition: 'before',
                 legendPosition: 'start',
                 legendOffset: 20
@@ -371,8 +419,8 @@ export default function Dashboard_Training({ setStepLevel, updateSteps, setStep,
                 id: 'risk',
                 label: 'Riesgo',
                 value: 'risk',
-                min: '0',
-                max: '1',
+                min: valueStartRisk,
+                max: valueEndRisk,
                 ticksPosition: 'before',
                 legendPosition: 'start',
                 legendOffset: 20
@@ -381,8 +429,8 @@ export default function Dashboard_Training({ setStepLevel, updateSteps, setStep,
                 id: 'arrival',
                 label: 'Llegada',
                 value: 'arrival',
-                min: '0',
-                max: '1',
+                min: valueStartArrival,
+                max: valueEndArrival,
                 ticksPosition: 'before',
                 legendPosition: 'start',
                 legendOffset: 20

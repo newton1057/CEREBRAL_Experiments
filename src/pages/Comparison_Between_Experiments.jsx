@@ -314,8 +314,12 @@ export default function Comparison_Between_Experiments({ setStep, updateSteps, s
 
             <hr />
             <div className='d-flex justify-content-end gap-4 mb-5'>
-              <Button className="d-flex align-items-center" variant="danger" 
-              onClick={handleReset} ><Broom className="me-2" weight="bold" />Limpiar cuestionario</Button>
+              <Button
+                className="d-flex align-items-center" variant="danger"
+                onClick={handleReset}
+              >
+                <Broom className="me-2" weight="bold" />Limpiar cuestionario
+              </Button>
               <Button className="d-flex align-items-center" variant="success" type="submit"><Check className="me-2" weight="bold" />Listo</Button>
             </div>
           </Form>

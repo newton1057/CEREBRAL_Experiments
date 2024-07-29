@@ -7,10 +7,15 @@ import Swal from 'sweetalert2';
 import axios from 'axios';
 
 // Importing Icons
-import { Prohibit, Play, ArrowCounterClockwise, Check } from "@phosphor-icons/react";
+import { Prohibit, Play, ArrowCounterClockwise, Check , Broom} from "@phosphor-icons/react";
 
-export default function Traditional_Experiment_Quiz({setStep,updateSteps, setStepsCompleted}) {
+export default function Traditional_Experiment_Quiz({ setStep, updateSteps, setStepsCompleted }) {
   const [validated, setValidated] = useState(false);
+
+  const handleReset = () => {
+    setValidated(false);
+    document.getElementById('quizTraditionalExperiment').reset();
+  };
 
   const handleSubmit = async (event) => {
     const form = event.currentTarget;
@@ -39,7 +44,7 @@ export default function Traditional_Experiment_Quiz({setStep,updateSteps, setSte
           width: '50%',
           confirmButtonColor: "#198754",
           confirmButtonText: "Siguiente",
-        }).then( (result) => {
+        }).then((result) => {
           console.log('result', result);
           setStep('Simulated_Experiment_Training');
           updateSteps('Traditional_Experiment_Quiz');
@@ -49,13 +54,13 @@ export default function Traditional_Experiment_Quiz({setStep,updateSteps, setSte
             phase: 'Traditional_Experiment_Quiz',
             phase_completed: 'Simulated_Experiment_Training'
           })
-          .then((response) => {
-            console.log(response);
-          })
-          .catch((error) => {
-            console.log(error);
-          }
-          );
+            .then((response) => {
+              console.log(response);
+            })
+            .catch((error) => {
+              console.log(error);
+            }
+            );
         });
       }).catch((error) => {
         console.log(error);
@@ -67,7 +72,7 @@ export default function Traditional_Experiment_Quiz({setStep,updateSteps, setSte
     <div>
       <h1>Cuestionario - Experimento Tradicional</h1>
       <div className="mt-5 ps-5 pe-5">
-        <Form noValidate validated={validated} onSubmit={handleSubmit}>
+        <Form id="quizTraditionalExperiment" noValidate validated={validated} onSubmit={handleSubmit}>
           <Row className="mb-3">
             <Form.Group>
               <FloatingLabel controlId="floatingSelect" label="Se requirió mucha actividad mental (e.g., pensar, decidir, o recordar).*">
@@ -240,6 +245,13 @@ export default function Traditional_Experiment_Quiz({setStep,updateSteps, setSte
           </Row>
           <hr />
           <div className='d-flex justify-content-end gap-4'>
+            <Button
+              className="d-flex align-items-center" 
+              variant="danger"
+              onClick={handleReset}
+            >
+              <Broom className="me-2" weight="bold" />Limpiar cuestionario
+            </Button>
             <Button
               className="d-flex align-items-center"
               variant="success"

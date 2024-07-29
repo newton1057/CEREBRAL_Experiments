@@ -303,13 +303,16 @@ export default function Simulated_Experiment_Assesment({ setStep, updateSteps, s
                 {dataGraph.map((row, index) => (
                   <tr key={index} style={{ backgroundColor: highlightedRow === index ? '#D9FAEA' : evualated.includes(index) ? '#dedede' : 'white' }}>
                     <td className='text-center align-middle'>
-                      {row.time}
+                      {/*row.time*/}
+                      {parseFloat(row.time.toFixed(4))}
                     </td>
                     <td className='text-center align-middle'>
-                      {row.risk}
+                      {/*row.risk */}
+                      {parseFloat(row.risk.toFixed(4))}
                     </td>
                     <td className='text-center align-middle'>
-                      {row.arrival}
+                      {/*row.arrival */}
+                      {parseFloat(row.arrival.toFixed(4))}
                     </td>
                   </tr>
                 ))}
@@ -387,7 +390,7 @@ export default function Simulated_Experiment_Assesment({ setStep, updateSteps, s
           <Modal.Title>Evaluar solución</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <h4 className='text-center'>¿Qué emoción identificaste al ver el video?</h4>
+          <h4 className='text-center'>¿Qué emoción sentiste al ver el robot?</h4>
           <hr />
           <h5 className='text-center'>Insatisfecho - Satisfecho</h5>
           <div className='d-flex align-items-center justify-content-between'>
