@@ -7,47 +7,46 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from 'react-bootstrap';
 import Table from 'react-bootstrap/Table';
 import Swal from 'sweetalert2';
-import Lottie from "lottie-react";
 import axios from 'axios';
 import { Modal } from 'react-bootstrap';
 import RangeSlider from 'react-bootstrap-range-slider';
 import ReactEmojis from "@souhaildev/reactemojis";
-
-// Importing Lottie Files
-import AnimationLoading from '../../assets/AnimationLoading.json';
+import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
+import 'react-circular-progressbar/dist/styles.css';
 
 // Importing Icons
 import { Check, Prohibit } from "@phosphor-icons/react";
 
 var data_default = [
   {
-    "time": "",
-    "risk": "",
-    "arrival": "",
+    "time": "0.0",
+    "risk": "0.0",
+    "arrival": "0.0",
     "id": "A"
   },
   {
-    "time": "",
-    "risk": "",
-    "arrival": "",
+    "time": "0.0",
+    "risk": "0.0",
+    "arrival": "0.0",
     "color": "#0B4A6F",
     "id": "B"
   },
   {
-    "time": "",
-    "risk": "",
-    "arrival": "",
+    "time": "0.0",
+    "risk": "0.0",
+    "arrival": "0.0",
     "id": "C"
   },
   {
-    "time": "",
-    "risk": "",
-    "arrival": "",
+    "time": "0.0",
+    "risk": "0.0",
+    "arrival": "0.0",
     "id": "D"
   }
 ]
 
 export default function Simulated_Experiment_Assesment({ setStep, updateSteps, setStepsCompleted }) {
+  // States of the component
   const [starExperiment, setStartExperiment] = useState(false); // State to start the experiment
   const [loading, setLoading] = useState(false); // State to show the loading animation
   const [highlightedRow, setHighlightedRow] = useState(null); // State to highlight the row selected
@@ -70,67 +69,175 @@ export default function Simulated_Experiment_Assesment({ setStep, updateSteps, s
   const videoRef = useRef(null); // Reference to the video element to capture the screen
   const [isCapturing, setIsCapturing] = useState(false); // State to capture the screen 
 
-  const startCapture = async () => {
-    try {
-      // Options for the getDisplayMedia() method
-      const displayMediaOptions = {
-        video: {
-          cursor: 'always', // Show the cursor
-          displaySurface: 'window' // Capture the window
-        },
-        audio: false // Disable audio
+  const [startSimulation, setStartSimulation] = useState(false); // State to start the simulation
+
+  const videoRefCamera = useRef(null);
+  const [hasPermission, setHasPermission] = useState(true);
+  const [deviceId, setDeviceId] = useState(null);
+
+  const [progress, setProgress] = useState(0); // State to store the progress of the experiment
+
+  const [conditionButton, setConditionButton] = useState(false); // State to enable the button to evaluate the solution
+
+
+  let mediaRecorder = null; // Variable normal para el MediaRecorder
+  let recordedChunks = []; // Variable normal para los fragmentos grabados
+
+  function generateIncrementalRandomNumbers() {
+    let numbers = [];
+    let min = 0;
+    let max = 100;
+
+    // Generar los primeros 9 números aleatorios en orden creciente
+    for (let i = 0; i < 8; i++) {
+      // Calcular el rango disponible para el siguiente número
+      let range = (max - min) / (10 - i); // Distribuye el rango equitativamente
+      let gap = Math.floor(Math.random() * range) + 1;
+      let randomNumber = min + gap;
+
+      numbers.push(randomNumber);
+
+      // Actualiza el valor mínimo para el próximo número
+      min = randomNumber + 1;
+    }
+
+    // Añadir el 100 como el último número
+    numbers.push(100);
+
+    return numbers;
+  }
+
+  // Inicia la grabación
+  const startRecording = () => {
+    if (videoRefCamera.current && videoRefCamera.current.srcObject) {
+      const stream = videoRefCamera.current.srcObject;
+      mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+
+      mediaRecorder.ondataavailable = (event) => {
+        console.log('Chunk received:', event.data.size);
+        if (event.data.size > 0) {
+          recordedChunks.push(event.data);
+        }
       };
 
-      const mediaPromise = navigator.mediaDevices.getDisplayMedia(displayMediaOptions); // Config options for navigator.mediaDevices.getDisplayMedia
-      const apiPromise = fetch('http://127.0.0.1:4000/API/MoveMouse'); // Config options for the API request NOTE: To be able to move the mouse automatically
+      mediaRecorder.onstop = async () => {
+        console.log('Recording stopped. Recorded chunks:', recordedChunks.length);
+        const blob = new Blob(recordedChunks, { type: 'video/webm' });
+        console.log('Blob size:', blob.size);
 
+        if (blob.size > 0) {
+          const formData = new FormData();
+          formData.append('video', blob, 'recording.webm');
+          formData.append('email', JSON.parse(sessionStorage.getItem('profile')).email);
+          formData.append('experiment', 'Simulated_Experiment_Assesment' + highlightedRow);
+
+          try {
+            const response = await axios.post('http://127.0.0.1:4000/API/SaveVideo', formData, {
+              headers: {
+                'Content-Type': 'multipart/form-data',
+              },
+            });
+            console.log('Response:', response.data);
+          } catch (error) {
+            console.error('Error uploading video:', error);
+          }
+        } else {
+          console.error('Blob is empty.');
+        }
+      };
+
+      mediaRecorder.start();
+    } else {
+      console.error('Video stream not available.');
+    }
+  };
+
+  // Detiene la grabación
+  const stopRecording = () => {
+    if (mediaRecorder) {
+      console.log('Stopping recording...');
+      mediaRecorder.stop();
+      mediaRecorder = null; // Opcionalmente, reinicia la variable a null
+    } else {
+      console.error('No media recorder found.');
+    }
+  };
+
+  useEffect(() => {
+    // Function fetch the devices available
+    const fetchDevices = async () => {
       try {
-        const [mediaStream, apiResponse] = await Promise.all([mediaPromise, apiPromise]); // Await both promises
-
-        // Manipulate the mediaStream and the API response
-        console.log('MediaStream:', mediaStream);
-        const data = await apiResponse.json();
-
-        if (videoRef.current) {
-          console.log('Setting video stream source');
-          videoRef.current.srcObject = mediaStream;
-          videoRef.current.onloadedmetadata = () => {
-            videoRef.current.play();
-          };
-        };
-
-        setIsCapturing(true); // Set the state to true
-        console.log('Capture started');
+        const devices = await navigator.mediaDevices.enumerateDevices(); // Get the devices available
+        const videoDevices = devices.filter(device => device.kind === 'videoinput');
+        console.log('Video devices:', videoDevices);
+        if (videoDevices.length > 0) {
+          setDeviceId(videoDevices[1].deviceId); // Set the device ID IMPORTANT: Change the index to select the camera (1: Virtual Camera)
+          console.log('Device ID:', videoDevices[1].deviceId);
+          console.log('Virtual Camera initialized');
+        } else {
+          console.error('No video devices found');
+        }
       } catch (error) {
-        console.error(error);
+        console.error('Error fetching devices', error);
       }
-    } catch (err) {
-      console.error(err);
-      setIsCapturing(false); // Set the state to false
-    }
-  };
+    };
 
-  const stopCapture = () => {
-    if (videoRef.current && videoRef.current.srcObject) {
-      const tracks = videoRef.current.srcObject.getTracks();
-      tracks.forEach(track => track.stop());
-      videoRef.current.srcObject = null;
-    }
-    setIsCapturing(false);
-  };
+    fetchDevices(); // Fetch the devices available
+  }, []);
+
+  useEffect(() => {
+    // Function to start the video
+    const startVideo = async () => {
+      if (deviceId) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: { deviceId: { exact: deviceId } }
+          });
+
+          // Check if the video element exists
+          if (videoRefCamera.current) {
+            videoRefCamera.current.srcObject = stream; // Set the video stream IMPORTANT: Virtual Camera
+          }
+        } catch (error) {
+          console.error('Error accessing the camera', error);
+          setHasPermission(false);
+        }
+      }
+    };
+
+    startVideo(); // Start the video
+  }, [deviceId]); // Dependency of the device ID
+
+
 
   const send_simulation = async () => {
-    console.log('Sending simulation to the backend ROS');
-    console.log(dataGraph[highlightedRow]);
-    const data = dataGraph[highlightedRow];
+    const data = dataGraph[highlightedRow]; // Select the data of the row that is being evaluated
+    console.log('Sending simulation to the backend ROS', data);
+    setStartSimulation(true); // Start the simulation
+    startRecording(); // Start the recording of the screen
     try {
       const response = await axios.post('http://127.0.0.1:4000/API/InitSimulation', {
-        id: data.id,
-        time: data.time,
-        risk: data.risk,
-        arrival: data.arrival
+        idParetoReal: data.ids_pareto_real, // Pareto real ID
+        numIndReal: data.nums_ind_real // Pareto real number
       });
-      console.log('Simulation sent to the backend ROS:', response.data);
+      console.log('Result simulation:', response.data);
+      console.log('Simulation finished successfully');
+
+      setStartSimulation(false); // Stop the simulation
+
+      stopRecording(); // Stop the recording of the screen
+
+      Swal.fire({
+        icon: 'success',
+        title: '¡Simulación terminada!',
+        text: 'La simulación a terminado.',
+        confirmButtonColor: "#1A8754",
+        confirmButtonText: "Siguiente",
+        allowOutsideClick: false
+      });
+
+
+
     } catch (error) {
       console.error('Error sending simulation:', error);
     }
@@ -138,10 +245,9 @@ export default function Simulated_Experiment_Assesment({ setStep, updateSteps, s
 
   useEffect(() => {
     if (dataGraph && starExperiment) {
-      send_simulation();
+      //send_simulation();
     }
-
-  }, [highlightedRow, dataGraph]);
+  }, [highlightedRow, dataGraph]); // Dependency of the highlighted row and the data of the graph
 
   const getSolutions = async () => {
     console.log('Getting solutions from the backend');
@@ -149,8 +255,29 @@ export default function Simulated_Experiment_Assesment({ setStep, updateSteps, s
 
     try {
       const response = await axios.get('http://127.0.0.1:4000/API/Solutions_Experiment_Simulated'); // Fetch the solutions from the backend
+      console.log('Solutions fetched from the backend:', response.data);
       const solutions = response.data.solutions; // Get the solutions from the backend
       console.log('Solutions fetched from the backend:', solutions);
+
+      let incrementalNumbers = generateIncrementalRandomNumbers(); // Get the incremental numbers to update the progress bar
+      let progressIndex = 0; // Index to iterate over the incremental numbers
+
+      const interval = setInterval(() => {
+        if (progressIndex < incrementalNumbers.length) {
+          let progressValue = incrementalNumbers[progressIndex]; // Get the value of the progress bar
+          setProgress(progressValue); // Update the progress bar
+          progressIndex++; // Increment the index
+        }
+
+        // Stop the interval when the progress bar is complete
+        if (progressIndex >= incrementalNumbers.length) {
+          clearInterval(interval);
+        }
+      }, 1000);
+
+      await new Promise(resolve => setTimeout(resolve, 10000)); // Wait for 10 seconds before proceeding
+      setProgress(0);
+
       setDataGraph(solutions); // Set the solutions fetched from the backend
       setStartExperiment(true); // Start the experiment
       setSelected(1); // Start with the first row selected
@@ -163,9 +290,7 @@ export default function Simulated_Experiment_Assesment({ setStep, updateSteps, s
   };
 
   const acceptSolutions = async () => {
-    console.log('Running the evaluation of emotions for the solution');
-    console.log('Selected row: ', highlightedRow);
-
+    setConditionButton(false);
     const selectedRow = dataGraph[highlightedRow]; // Select the data of the row that is being evaluated
     console.log('Data of the selected row: ', selectedRow);
 
@@ -176,15 +301,18 @@ export default function Simulated_Experiment_Assesment({ setStep, updateSteps, s
       risk: selectedRow.risk,
       arrival: selectedRow.arrival,
       sliderDissatisfiedSatisfied,
-      sliderBoredExcited
+      sliderBoredExcited,
+      id_pareto: selectedRow.id_pareto,
+      num_ind: selectedRow.num_ind,
+      id_pareto_real: selectedRow.ids_pareto_real,
+      num_ind_real: selectedRow.nums_ind_real,
+      emotion_value: sliderDissatisfiedSatisfied,
     };
 
     console.log('New solution check: ', newSolutionCheck);
-
     const updatedSolutionCheck = [...solutionCheck, newSolutionCheck]; // Add the new solution check to the array of solutions evaluated
 
     setSolutionCheck(updatedSolutionCheck); // Update the array of solutions evaluated
-
     setEvualated([...evualated, highlightedRow]); // Update the array of solutions evaluated
 
     if (highlightedRow === dataGraph.length - 1) {
@@ -194,24 +322,57 @@ export default function Simulated_Experiment_Assesment({ setStep, updateSteps, s
 
       try {
         // Enviar las soluciones evaluadas al backend
-        await axios.post('http://127.0.0.1:4000/API/SaveSolutions_Experiment_Simulated', {
-          email: 'newton1057@gmail.com', // Email of the user
+        const response = await axios.post('http://127.0.0.1:4000/API/SaveSolutions_Experiment_Simulated', {
+          email: JSON.parse(sessionStorage.getItem('profile')).email, // User email
           solutions: updatedSolutionCheck, // Send the solutions evaluated to the backend
           type: 'Real'
         });
 
         console.log('Solutions saved successfully from the backend');
+        console.log('Response:', response.data);
+
+        let incrementalNumbers = generateIncrementalRandomNumbers(); // Get the incremental numbers to update the progress bar
+        let progressIndex = 0; // Index to iterate over the incremental numbers
+
+        const interval = setInterval(() => {
+          if (progressIndex < incrementalNumbers.length) {
+            let progressValue = incrementalNumbers[progressIndex]; // Get the value of the progress bar
+            setProgress(progressValue); // Update the progress bar
+            progressIndex++; // Increment the index
+          }
+
+          // Stop the interval when the progress bar is complete
+          if (progressIndex >= incrementalNumbers.length) {
+            clearInterval(interval);
+          }
+        }, 1000);
+
+        await new Promise(resolve => setTimeout(resolve, 10000)); // Wait for 10 seconds before proceeding
+        setProgress(0);
+
+
+
         setSolutionCheck([]); // Reset the array of solutions evaluated
-        getSolutions(); // Get new solutions from the backend
+
+        const solutions = response.data.solutions; // Get the solutions from the backend
+        console.log('Solutions fetched from the backend:', solutions);
+
+        setSelected(1); // Start with the first row selected
+        setHighlightedRow(0); // Start with the first row highlighted
+        setDataGraph(solutions); // Set the solutions fetched from the backend
+
+        setStartExperiment(true); // Start the experiment
+        //getSolutions(); // Get new solutions from the backend
       } catch (error) {
         console.error('Error saving solutions:', error);
       }
 
       setLoading(false); // Hide loading animation
+
       Swal.fire({
         icon: 'success',
         title: '¡Soluciones guardadas!',
-        text: 'Las soluciones han sido guardadas con éxito. ¿Deseas continuar con el experimento realizando más soluciones?',
+        text: '¿Deseas continuar con el experimento realizando más soluciones?',
         showCancelButton: true,
         cancelButtonColor: "#1A8754",
         confirmButtonColor: "#DC3545",
@@ -220,8 +381,7 @@ export default function Simulated_Experiment_Assesment({ setStep, updateSteps, s
         allowOutsideClick: false
       }).then((result) => {
         if (result.isConfirmed) {
-          console.log('Finalizar el experimento');
-          stopCapture();
+          console.log('Finish the experiment simulation');
           Swal.fire({
             icon: 'success',
             title: '¡Experimento finalizado!',
@@ -272,10 +432,10 @@ export default function Simulated_Experiment_Assesment({ setStep, updateSteps, s
         }
       }
       );
+    } else {
+      setHighlightedRow((prev) => (prev === null ? 0 : (prev + 1) % dataGraph.length)); // Update the highlighted row
+      setSelected(selected + 1); // Update the selected row
     }
-
-    setHighlightedRow((prev) => (prev === null ? 0 : (prev + 1) % dataGraph.length)); // Update the highlighted row
-    setSelected(selected + 1); // Update the selected row
 
     handleCloseModalEmotion(); // Close the modal of emotions
 
@@ -290,8 +450,8 @@ export default function Simulated_Experiment_Assesment({ setStep, updateSteps, s
         <h1 className='mb-0'>Evaluación - Experimento Tradicional</h1>
         <hr />
         <div className='d-flex align-items-center' style={{ height: "-webkit-fill-available" }}>
-          <div className='w-50'>
-            <Table bordered>
+          <div style={{ width: '30%' }}>
+            <Table>
               <thead>
                 <tr>
                   <th className='text-center'>Tiempo</th>
@@ -303,16 +463,14 @@ export default function Simulated_Experiment_Assesment({ setStep, updateSteps, s
                 {dataGraph.map((row, index) => (
                   <tr key={index} style={{ backgroundColor: highlightedRow === index ? '#D9FAEA' : evualated.includes(index) ? '#dedede' : 'white' }}>
                     <td className='text-center align-middle'>
-                      {/*row.time*/}
-                      {parseFloat(row.time.toFixed(4))}
+                      {parseFloat(row.time).toFixed(4)}
                     </td>
                     <td className='text-center align-middle'>
-                      {/*row.risk */}
-                      {parseFloat(row.risk.toFixed(4))}
+                      {parseFloat(row.risk).toFixed(4)}
+
                     </td>
                     <td className='text-center align-middle'>
-                      {/*row.arrival */}
-                      {parseFloat(row.arrival.toFixed(4))}
+                      {parseFloat(row.arrival).toFixed(4)}
                     </td>
                   </tr>
                 ))}
@@ -320,9 +478,7 @@ export default function Simulated_Experiment_Assesment({ setStep, updateSteps, s
             </Table>
 
             <div className='w-100 d-flex justify-content-around p-3'>
-              <Button
-                className='d-flex align-items-center'
-                variant='danger'
+              <Button className='d-flex align-items-center' variant='danger'
                 onClick={() => (
                   Swal.fire({
                     icon: 'warning',
@@ -341,46 +497,64 @@ export default function Simulated_Experiment_Assesment({ setStep, updateSteps, s
               </Button>
 
               {starExperiment ?
-                <>
-                  <Button className='d-flex align-items-center' variant='success' onClick={() => setShowModalEmotion(true)} ><Check className='me-2' weight="bold" />Evaluar solución</Button>
-                </>
+                <Button className='d-flex align-items-center' variant='success'
+                  onClick={() => {
+                    if (conditionButton) {
+                      if (startSimulation) {
+                        Swal.fire({
+                          icon: 'error',
+                          title: '¡Simulación en proceso!',
+                          text: 'La simulación no ha terminado',
+                          confirmButtonColor: "#1A8754",
+                          confirmButtonText: "Aceptar",
+                          allowOutsideClick: false
+                        });
+                      } else {
+                        setShowModalEmotion(true)
+                      }
+                    } else {
+                      setConditionButton(true);
+                      send_simulation();
+                    }
+
+                  }}
+                >
+                  <Check className='me-2' weight="bold" />Evaluar solución
+                </Button>
                 :
-                <>
-                  <Button
-                    className='d-flex align-items-center'
-                    variant='success'
-                    onClick={() => {
-                      getSolutions();
-                      startCapture();
-                    }}
-                  >
-                    <Check className='me-2' weight="bold" />Iniciar
-                  </Button>
-                </>
+                <Button className='d-flex align-items-center' variant='success' onClick={() => getSolutions()}><Check className='me-2' weight="bold" />Iniciar</Button>
               }
             </div>
           </div>
 
           {/* DIV : CaptureScreen */}
-          <div className='w-50 h-100 p-3 d-flex flex-column justify-content-center'>
-            {/* Aquí puedes agregar más contenido si es necesario */}
-            {starExperiment && (
-              <div>
-                <button onClick={isCapturing ? stopCapture : startCapture}>
-                  {isCapturing ? 'Stop Capture' : 'Start Capture'}
-                </button>
-                <video ref={videoRef} style={{ width: '100%', border: '1px solid black' }} autoPlay></video>
-              </div>
-            )
-            }
+          <div className='h-100 p-3 d-flex flex-column justify-content-center' style={{ width: '70%' }}>
+            <video ref={videoRefCamera} style={{ width: '100%', border: '1px solid black' }} autoPlay />
           </div>
         </div>
       </div>
 
       {/* Animation of Loading */}
       {loading && (
-        <div className='d-flex justify-content-center align-items-center' style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0, 0, 0, 0.5)', zIndex: 9999 }}>
-          <Lottie animationData={AnimationLoading} style={{ width: 200, height: 200 }} />
+        <div className='d-flex flex-column justify-content-center align-items-center' style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0, 0, 0, 0.8)', zIndex: 9999 }}>
+          <div style={{ width: 200, height: 200 }}>
+            <CircularProgressbar
+              style={{ width: 200, height: 200 }}
+              value={progress}
+              text={`${progress}%`}
+              styles={buildStyles({
+                textSize: '20px',
+                textColor: 'white',
+                trailColor: '#d6d6d6',
+                backgroundColor: '#3e98c7',
+              })} />
+          </div>
+          {
+            /**
+             * <ProgressBar animated now={progress} label={<span style={{ fontWeight: 'bold', fontSize: '20px' }}>{`${progress}%`}</span>} style={{ width: '80%', marginTop: 20, marginBottom: 20, height: '50px' }} />
+             */
+          }
+          <h3 className='mt-5' style={{ color: "white" }}>Cargando soluciones...</h3>
         </div>
       )}
 

@@ -3,7 +3,7 @@
 // Date: 03/07/2024
 
 // Importing libraries
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Dropdown from 'react-bootstrap/Dropdown';
 import { User, Gear, SignOut } from "@phosphor-icons/react";
 
@@ -38,12 +38,19 @@ export default function NavBar({ showModalProfile, handleCloseModalProfile, hand
             </Dropdown.Toggle>
 
             <Dropdown.Menu>
-              <Dropdown.Item className='d-flex align-items-center' onClick={handleShowModalProfile} ><User className='me-2' />Perfil</Dropdown.Item>
+              {
+                !logged &&
+                <>
+                  <Dropdown.Item className='d-flex align-items-center' onClick={handleShowModalProfile} ><User className='me-2' />Perfil</Dropdown.Item>
+                  <hr className='mb-2 mt-2' />
+                </>
+
+              }
+
               {logged &&
                 <>
-                  <Dropdown.Divider />
-                  <Dropdown.Item className='d-flex align-items-center'><Gear className='me-2' />Editar perfil</Dropdown.Item>
-                  <Dropdown.Divider />
+                  <Dropdown.Item className='d-flex align-items-center' onClick={handleShowModalProfile} ><Gear className='me-2' />Editar perfil</Dropdown.Item>
+                  <hr className='mb-2 mt-2' />
                   <Dropdown.Item className='d-flex align-items-center' onClick={handle_SignOut}><SignOut className='me-2' />Cerrar sesión</Dropdown.Item>
                 </>
               }
@@ -52,7 +59,7 @@ export default function NavBar({ showModalProfile, handleCloseModalProfile, hand
         </div>
       }
 
-      <Modal_Profile show={showModalProfile} handleClose={handleCloseModalProfile} handleOpen={handleShowModalProfile} setLogged={setLogged} setStep={setStep} updateSteps={updateSteps} setStepsCompleted={setStepsCompleted} />
+      <Modal_Profile show={showModalProfile} handleClose={handleCloseModalProfile} handleOpen={handleShowModalProfile} setLogged={setLogged} setStep={setStep} updateSteps={updateSteps} setStepsCompleted={setStepsCompleted} logged={logged}/>
     </>
   );
 }

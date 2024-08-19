@@ -7,42 +7,41 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from 'react-bootstrap';
 import Table from 'react-bootstrap/Table';
 import Swal from 'sweetalert2';
-import Lottie from "lottie-react";
 import axios from 'axios';
 import { Modal } from 'react-bootstrap';
 import RangeSlider from 'react-bootstrap-range-slider';
 import ReactEmojis from "@souhaildev/reactemojis";
-
-// Importing Lottie Files
-import AnimationLoading from '../../assets/AnimationLoading.json';
+import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
+import 'react-circular-progressbar/dist/styles.css';
 
 // Importing Icons
 import { Check, Prohibit } from "@phosphor-icons/react";
 
+// Data for the Parallel Coordinates Graph (Default and Updated)
 var data_default = [
   {
-    "time": "",
-    "risk": "",
-    "arrival": "",
+    "time": "0.0",
+    "risk": "0.0",
+    "arrival": "0.0",
     "id": "A"
   },
   {
-    "time": "",
-    "risk": "",
-    "arrival": "",
+    "time": "0.0",
+    "risk": "0.0",
+    "arrival": "0.0",
     "color": "#0B4A6F",
     "id": "B"
   },
   {
-    "time": "",
-    "risk": "",
-    "arrival": "",
+    "time": "0.0",
+    "risk": "0.0",
+    "arrival": "0.0",
     "id": "C"
   },
   {
-    "time": "",
-    "risk": "",
-    "arrival": "",
+    "time": "0.0",
+    "risk": "0.0",
+    "arrival": "0.0",
     "id": "D"
   }
 ]
@@ -69,54 +68,54 @@ export default function Dashboard_Training_Simulated_Experiment({ setStep, setSt
 
   const [startSimulation, setStartSimulation] = useState(false);
 
-  const startCapture = async () => {
-    try {
-      // Options for the getDisplayMedia() method
-      const displayMediaOptions = {
-        video: {
-          cursor: 'always', // Show the cursor
-          displaySurface: 'window' // Capture the window
-        },
-        audio: false // Disable audio
-      };
 
-      const mediaPromise = navigator.mediaDevices.getDisplayMedia(displayMediaOptions); // Config options for navigator.mediaDevices.getDisplayMedia
-      const apiPromise = fetch('http://127.0.0.1:4000/API/MoveMouse'); // Config options for the API request NOTE: To be able to move the mouse automatically
+  const [progress, setProgress] = useState(0); // State to store the progress of the experiment
 
+  const [conditionButton, setConditionButton] = useState(false); // State to enable the button to evaluate the solution
+
+  const videoRefCamera = useRef(null);
+  const [hasPermission, setHasPermission] = useState(true);
+  const [deviceId, setDeviceId] = useState(null);
+
+  useEffect(() => {
+    const fetchDevices = async () => {
       try {
-        const [mediaStream, apiResponse] = await Promise.all([mediaPromise, apiPromise]); // Await both promises
-
-        // Manipulate the mediaStream and the API response
-        console.log('MediaStream:', mediaStream);
-        const data = await apiResponse.json();
-
-        if (videoRef.current) {
-          console.log('Setting video stream source');
-          videoRef.current.srcObject = mediaStream;
-          videoRef.current.onloadedmetadata = () => {
-            videoRef.current.play();
-          };
-        };
-
-        setIsCapturing(true); // Set the state to true
-        console.log('Capture started');
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        console.log('Devices:', devices);
+        const videoDevices = devices.filter(device => device.kind === 'videoinput');
+        if (videoDevices.length > 0) {
+          // Usa el ID del primer dispositivo de video disponible
+          setDeviceId(videoDevices[1].deviceId);
+        } else {
+          console.error('No video devices found');
+        }
       } catch (error) {
-        console.error(error);
+        console.error('Error fetching devices', error);
       }
-    } catch (err) {
-      console.error(err);
-      setIsCapturing(false); // Set the state to false
-    }
-  };
+    };
 
-  const stopCapture = () => {
-    if (videoRef.current && videoRef.current.srcObject) {
-      const tracks = videoRef.current.srcObject.getTracks();
-      tracks.forEach(track => track.stop());
-      videoRef.current.srcObject = null;
-    }
-    setIsCapturing(false);
-  };
+    fetchDevices();
+  }, []);
+
+  useEffect(() => {
+    const startVideo = async () => {
+      if (deviceId) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: { deviceId: { exact: deviceId } }
+          });
+          if (videoRefCamera.current) {
+            videoRefCamera.current.srcObject = stream;
+          }
+        } catch (error) {
+          console.error('Error accessing the camera', error);
+          setHasPermission(false);
+        }
+      }
+    };
+
+    startVideo();
+  }, [deviceId]);
 
   const send_simulation = async () => {
     console.log('Sending simulation to the backend ROS');
@@ -130,6 +129,7 @@ export default function Dashboard_Training_Simulated_Experiment({ setStep, setSt
       });
       console.log('Simulation sent to the backend ROS:', response.data);
       setStartSimulation(false);
+      //setConditionButton(true);
       Swal.fire({
         icon: 'success',
         title: '¡Simulación terminada!',
@@ -146,19 +146,63 @@ export default function Dashboard_Training_Simulated_Experiment({ setStep, setSt
 
   useEffect(() => {
     if (dataGraph && starExperiment) {
-      send_simulation();
+      //send_simulation();
     }
 
   }, [highlightedRow, dataGraph]);
 
+  function generateIncrementalRandomNumbers() {
+    let numbers = [];
+    let min = 0;
+    let max = 100;
+
+    // Generar los primeros 9 números aleatorios en orden creciente
+    for (let i = 0; i < 8; i++) {
+      // Calcular el rango disponible para el siguiente número
+      let range = (max - min) / (10 - i); // Distribuye el rango equitativamente
+      let gap = Math.floor(Math.random() * range) + 1;
+      let randomNumber = min + gap;
+
+      numbers.push(randomNumber);
+
+      // Actualiza el valor mínimo para el próximo número
+      min = randomNumber + 1;
+    }
+
+    // Añadir el 100 como el último número
+    numbers.push(100);
+
+    return numbers;
+  }
+
+
   const getSolutions = async () => {
     console.log('Getting solutions from the backend');
     setLoading(true); // Show loading animation while fetching data
-
     try {
       const response = await axios.get('http://127.0.0.1:4000/API/Solutions_Experiment_Simulated'); // Fetch the solutions from the backend
       const solutions = response.data.solutions; // Get the solutions from the backend
       console.log('Solutions fetched from the backend:', solutions);
+
+      let incrementalNumbers = generateIncrementalRandomNumbers(); // Get the incremental numbers to update the progress bar
+      let progressIndex = 0; // Index to iterate over the incremental numbers
+
+      const interval = setInterval(() => {
+        if (progressIndex < incrementalNumbers.length) {
+          let progressValue = incrementalNumbers[progressIndex]; // Get the value of the progress bar
+          setProgress(progressValue); // Update the progress bar
+          progressIndex++; // Increment the index
+        }
+
+        // Stop the interval when the progress bar is complete
+        if (progressIndex >= incrementalNumbers.length) {
+          clearInterval(interval);
+        }
+      }, 1000);
+
+      await new Promise(resolve => setTimeout(resolve, 10000)); // Wait for 10 seconds before proceeding
+      setProgress(0);
+
       setDataGraph(solutions); // Set the solutions fetched from the backend
       setStartExperiment(true); // Start the experiment
       setSelected(1); // Start with the first row selected
@@ -171,6 +215,7 @@ export default function Dashboard_Training_Simulated_Experiment({ setStep, setSt
   };
 
   const acceptSolutions = async () => {
+    setConditionButton(false);
     console.log('Running the evaluation of emotions for the solution');
     console.log('Selected row: ', highlightedRow);
 
@@ -203,7 +248,7 @@ export default function Dashboard_Training_Simulated_Experiment({ setStep, setSt
       try {
         // Enviar las soluciones evaluadas al backend
         await axios.post('http://127.0.0.1:4000/API/SaveSolutions_Experiment_Simulated', {
-          email: 'newton1057@gmail.com', // Email of the user
+          email: JSON.parse(sessionStorage.getItem('profile')).email, // Email of the user
           solutions: updatedSolutionCheck, // Send the solutions evaluated to the backend
           type: 'Test'
         });
@@ -229,8 +274,6 @@ export default function Dashboard_Training_Simulated_Experiment({ setStep, setSt
       }).then((result) => {
         if (result.isConfirmed) {
           console.log('Finalizar el experimento');
-          stopCapture();
-
 
           axios.post('http://127.0.0.1:4000/API/UpdatePhase', {
             email: JSON.parse(sessionStorage.getItem('profile')).email,
@@ -241,6 +284,7 @@ export default function Dashboard_Training_Simulated_Experiment({ setStep, setSt
           }).catch((error) => {
             console.error(error);
           });
+
           updateSteps('Simulated_Experiment_Training');
           setStep('Simulated_Experiment_Assesment');
           setStepsCompleted('Simulated_Experiment_Assesment');
@@ -267,8 +311,8 @@ export default function Dashboard_Training_Simulated_Experiment({ setStep, setSt
       <h1 className='mb-0'>Entrenamiento - Experimento Tradicional</h1>
       <hr />
       <div className='d-flex align-items-center' style={{ height: "-webkit-fill-available" }}>
-        <div className='w-50'>
-          <Table bordered >
+        <div style={{ width: '30%' }}>
+          <Table >
             <thead>
               <tr>
                 <th className='text-center'>Tiempo</th>
@@ -280,16 +324,13 @@ export default function Dashboard_Training_Simulated_Experiment({ setStep, setSt
               {dataGraph.map((row, index) => (
                 <tr key={index} style={{ backgroundColor: highlightedRow === index ? '#D9FAEA' : evualated.includes(index) ? '#dedede' : 'white' }}>
                   <td className='text-center align-middle'>
-                    {/*row.time*/}
-                    {parseFloat(row.time.toFixed(4))}
+                    {parseFloat(row.time).toFixed(4)}
                   </td>
                   <td className='text-center align-middle'>
-                    {/*row.risk */}
-                    {parseFloat(row.risk.toFixed(4))}
+                    {parseFloat(row.risk).toFixed(4)}
                   </td>
                   <td className='text-center align-middle'>
-                    {/*row.arrival */}
-                    {parseFloat(row.arrival.toFixed(4))}
+                    {parseFloat(row.arrival).toFixed(4)}
                   </td>
                 </tr>
               ))}
@@ -304,82 +345,82 @@ export default function Dashboard_Training_Simulated_Experiment({ setStep, setSt
                 Swal.fire({
                   icon: 'warning',
                   title: 'Prueba no completada',
+                  width: '30%',
                   html: '¿Estás seguro de que deseas salir de la prueba? <br> Los datos no se guardarán.',
-                  confirmButtonColor: "#d33",
+                  confirmButtonColor: "#dc3545",
                   confirmButtonText: "Salir"
                 }).then((result) => {
                   if (result.isConfirmed) {
-                    stopCapture(); // Stop the capture of the screen
                     setStepLevel('') // Return to the previous step
                   }
                 }))
-              }>
+              }
+            >
               <Prohibit className='me-2' weight="bold" />Cancelar
             </Button>
 
             {starExperiment ?
-              <>
-                <Button className='d-flex align-items-center' variant='success' 
+              <Button className='d-flex align-items-center' variant='success'
                 onClick={() => {
-                  if (startSimulation){
-                    Swal.fire({
-                      icon: 'error',
-                      title: '¡Simulación en proceso!',
-                      text: 'La simulación no ha terminado',
-                      confirmButtonColor: "#1A8754",
-                      confirmButtonText: "Aceptar",
-                      allowOutsideClick: false
-                    });
+                  if (conditionButton) {
+                    console.log('Tendria que mandar Simulación');
+                    if (startSimulation) {
+                      Swal.fire({
+                        icon: 'error',
+                        title: '¡Simulación en proceso!',
+                        text: 'La simulación no ha terminado',
+                        confirmButtonColor: "#1A8754",
+                        confirmButtonText: "Aceptar",
+                        allowOutsideClick: false
+                      });
+                    } else {
+                      setShowModalEmotion(true)
+                    }
                   } else {
-                    setShowModalEmotion(true)
-                  }
+                    console.log('Tendria que mandar Evaluar solución');
+                    setConditionButton(true);
+                    send_simulation();
+                    
+                   }
+
                   
-                }
-                  } >
-                  <Check className='me-2' weight="bold" />Evaluar solución
-                  </Button>
-              </>
+                }}
+              >
+                <Check className='me-2' weight="bold" />Evaluar solución
+              </Button>
               :
-              <>
-                <Button
-                  className='d-flex align-items-center'
-                  variant='success'
-                  onClick={() => {
-                    getSolutions();
-                    startCapture();
-                  }}
-                >
-                  <Check className='me-2' weight="bold" />Iniciar
-                </Button>
-              </>
+              <Button className='d-flex align-items-center' variant='success' onClick={() => { getSolutions(); }}><Check className='me-2' weight="bold" />Iniciar</Button>
             }
           </div>
         </div>
 
         {/* DIV : CaptureScreen */}
-        <div className='w-50 h-100 p-3 d-flex flex-column justify-content-center'>
-          {/* Aquí puedes agregar más contenido si es necesario */}
-          {starExperiment && (
-            <div>
-              {
-                /*
-                <button onClick={isCapturing ? stopCapture : startCapture}>
-                {isCapturing ? 'Stop Capture' : 'Start Capture'}
-              </button>
-                */
-              }
-              <video ref={videoRef} style={{ width: '100%', border: '1px solid black' }} autoPlay></video>
-            </div>
-          )
-          }
+        <div className='h-100 p-3 d-flex flex-column justify-content-center' style={{ width: '70%' }}>
+          <video ref={videoRefCamera} style={{ width: '100%', border: '1px solid black' }} autoPlay />
         </div>
       </div>
 
 
-      {/* Animation of Loading */}
       {loading && (
-        <div className='d-flex justify-content-center align-items-center' style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0, 0, 0, 0.5)', zIndex: 9999 }}>
-          <Lottie animationData={AnimationLoading} style={{ width: 200, height: 200 }} />
+        <div className='d-flex flex-column justify-content-center align-items-center' style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0, 0, 0, 0.8)', zIndex: 9999 }}>
+          <div style={{ width: 200, height: 200 }}>
+            <CircularProgressbar
+              style={{ width: 200, height: 200 }}
+              value={progress}
+              text={`${progress}%`}
+              styles={buildStyles({
+                textSize: '20px',
+                textColor: 'white',
+                trailColor: '#d6d6d6',
+                backgroundColor: '#3e98c7',
+              })} />
+          </div>
+          {
+            /**
+             * <ProgressBar animated now={progress} label={<span style={{ fontWeight: 'bold', fontSize: '20px' }}>{`${progress}%`}</span>} style={{ width: '80%', marginTop: 20, marginBottom: 20, height: '50px' }} />
+             */
+          }
+          <h3 className='mt-5' style={{ color: "white" }}>Cargando soluciones...</h3>
         </div>
       )}
 

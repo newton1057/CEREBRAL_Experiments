@@ -71,7 +71,8 @@ export default function Traditional_Experiment_Quiz({ setStep, updateSteps, setS
   return (
     <div>
       <h1>Cuestionario - Experimento Tradicional</h1>
-      <div className="mt-5 ps-5 pe-5">
+      <hr />
+      <div className="mt-4 ps-4 pe-4">
         <Form id="quizTraditionalExperiment" noValidate validated={validated} onSubmit={handleSubmit}>
           <Row className="mb-3">
             <Form.Group>

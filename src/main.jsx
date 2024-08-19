@@ -11,7 +11,5 @@ import 'react-bootstrap-range-slider/dist/react-bootstrap-range-slider.css';
 
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-
   <App />
-
 )

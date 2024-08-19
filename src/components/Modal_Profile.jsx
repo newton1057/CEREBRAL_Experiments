@@ -8,24 +8,34 @@ import Form from 'react-bootstrap/Form';
 import Row from 'react-bootstrap/Row';
 import FloatingLabel from 'react-bootstrap/FloatingLabel';
 import { User } from "@phosphor-icons/react";
-
-import { useState } from 'react';
-
+import { useEffect, useState } from 'react';
 import axios from 'axios';
 
-
-export default function Modal_Profile({ show, handleClose, handleOpen, setLogged, setStep, updateSteps, setStepsCompleted }) {
+export default function Modal_Profile({ show, handleClose, handleOpen, setLogged, setStep, updateSteps, setStepsCompleted, logged }) {
+  // State for the components
+  const [dataProfileLogged, setDataProfileLogged] = useState({});
+  const [dataLevelLogged, setDataLevelLogged] = useState({});
+  const [dataPermissionsLogged, setDataPermissionsLogged] = useState({});
   const [validatedFormProfile, setValidatedFormProfile] = useState(false);
   const [validatedFormLevel, setValidatedFormLevel] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
-
   const [validatedLogin, setValidatedLogin] = useState(false);
   const [error, setError] = useState('');
-
+  const [modalShowSignIn, setModalShowSignIn] = useState(false);
 
   // State for variables special for this component
   const [age, setAge] = useState('');
   const [phone, setPhone] = useState('');
+
+  useEffect(() => {
+    if (logged) {
+      setDataProfileLogged(JSON.parse(sessionStorage.getItem('profile')));
+      setAge(JSON.parse(sessionStorage.getItem('profile')).age);
+      setPhone(JSON.parse(sessionStorage.getItem('profile')).phone);
+      setDataLevelLogged(JSON.parse(sessionStorage.getItem('level')));
+      setDataPermissionsLogged(JSON.parse(sessionStorage.getItem('permissions')));
+    }
+  }, []);
 
   const handleSubmitLogin = async (event) => {
     const form = event.currentTarget;
@@ -63,16 +73,9 @@ export default function Modal_Profile({ show, handleClose, handleOpen, setLogged
         }
       }
       );
-
     }
-
     setValidatedLogin(true);
   };
-
-
-
-
-  const [modalShowSignIn, setModalShowSignIn] = useState(false);
 
   const handleShowSignIn = () => {
     handleClose();
@@ -155,28 +158,48 @@ export default function Modal_Profile({ show, handleClose, handleOpen, setLogged
     const profile = JSON.parse(sessionStorage.getItem('profile')); // Get the profile data
     const level = JSON.parse(sessionStorage.getItem('level')); // Get the level data
 
-    // POST data to the server
-    await axios.post('http://127.0.0.1:4000/API/Users', {
-      profile: profile,
-      level: level,
-      permissions: data
-    }).then((response) => {
-      console.log(response);
-    }).catch((error) => {
-      console.log(error);
-    });
+    if (logged) {
+      console.log('Update user');
 
-    await axios.post('http://127.0.0.1:4000/API/UpdatePhase', {
-      email: profile.email,
-      phase: '',
-      phase_completed: 'Introduction'
-    }).then((response) => {
-      console.log(response);
-    }).catch((error) => {
-      console.log(error);
-    });
-    
-    handleClose();
+      // PUT data to the server
+      await axios.put('http://127.0.0.1:4000/API/Users', {
+        profile: profile,
+        level: level,
+        permissions: data
+      }).then((response) => {
+        console.log(response);
+      }).catch((error) => {
+        console.log(error);
+      });
+
+      handleClose();
+
+      window.location.reload(); // Reloading the page
+
+    } else {
+      // POST data to the server
+      await axios.post('http://127.0.0.1:4000/API/Users', {
+        profile: profile,
+        level: level,
+        permissions: data
+      }).then((response) => {
+        console.log(response);
+      }).catch((error) => {
+        console.log(error);
+      });
+
+      await axios.post('http://127.0.0.1:4000/API/UpdatePhase', {
+        email: profile.email,
+        phase: '',
+        phase_completed: 'Introduction'
+      }).then((response) => {
+        console.log(response);
+      }).catch((error) => {
+        console.log(error);
+      });
+
+      handleClose();
+    }
   };
 
   return (
@@ -185,7 +208,9 @@ export default function Modal_Profile({ show, handleClose, handleOpen, setLogged
         <Modal.Header closeButton>
           <div className='w-100 pe-3 d-flex justify-content-between'>
             <Modal.Title className='d-flex align-items-center'><User className='me-2' />Perfil</Modal.Title>
-            <Button className='d-flex align-items-center' variant='success' onClick={handleShowSignIn}><SignIn className='me-2' weight="bold" />Iniciar sesión</Button>
+            {!logged &&
+              <Button className='d-flex align-items-center' variant='success' onClick={handleShowSignIn}><SignIn className='me-2' weight="bold" />Iniciar sesión</Button>
+            }
           </div>
         </Modal.Header>
         <Modal.Body>
@@ -204,7 +229,7 @@ export default function Modal_Profile({ show, handleClose, handleOpen, setLogged
                       label="Iniciales *"
                       className="mb-3"
                     >
-                      <Form.Control type="text" name="initials" placeholder="" required />
+                      <Form.Control type="text" name="initials" placeholder="" defaultValue={logged ? dataProfileLogged.initials : ''} required />
                       <Form.Control.Feedback type="invalid">
                         Introduce tus iniciales.
                       </Form.Control.Feedback>
@@ -219,7 +244,7 @@ export default function Modal_Profile({ show, handleClose, handleOpen, setLogged
                       label="Nombres *"
                       className="mb-3"
                     >
-                      <Form.Control type="text" name='name' placeholder="" required />
+                      <Form.Control type="text" name='name' placeholder="" defaultValue={logged ? dataProfileLogged.name : ''} required />
                       <Form.Control.Feedback type="invalid">
                         Introduce tus nombres.
                       </Form.Control.Feedback>
@@ -231,7 +256,7 @@ export default function Modal_Profile({ show, handleClose, handleOpen, setLogged
                       label="Apellido paterno *"
                       className="mb-3"
                     >
-                      <Form.Control type="text" name='fatherLastName' placeholder="" required />
+                      <Form.Control type="text" name='fatherLastName' placeholder="" defaultValue={logged ? dataProfileLogged.fatherLastName : ''} required />
                       <Form.Control.Feedback type="invalid">
                         Introduce tu apellido paterno.
                       </Form.Control.Feedback>
@@ -243,7 +268,7 @@ export default function Modal_Profile({ show, handleClose, handleOpen, setLogged
                       label="Apellido materno *"
                       className="mb-3"
                     >
-                      <Form.Control type="text" name='motherLastName' placeholder="" required />
+                      <Form.Control type="text" name='motherLastName' placeholder="" defaultValue={logged ? dataProfileLogged.motherLastName : ''} required />
                       <Form.Control.Feedback type="invalid">
                         Introduce tu apellido materno.
                       </Form.Control.Feedback>
@@ -262,6 +287,7 @@ export default function Modal_Profile({ show, handleClose, handleOpen, setLogged
                         name='age'
                         placeholder=""
                         value={age}
+
                         onChange={(e) => {
                           const value = e.target.value;
                           // Only allow numeric characters
@@ -281,7 +307,7 @@ export default function Modal_Profile({ show, handleClose, handleOpen, setLogged
                       label="Correo electrónico *"
                       className="mb-3"
                     >
-                      <Form.Control type="email" name='email' placeholder="" required />
+                      <Form.Control type="email" name='email' placeholder="" defaultValue={logged ? dataProfileLogged.email : ''} required />
                       <Form.Control.Feedback type="invalid">
                         Introduce tu correo electrónico.
                       </Form.Control.Feedback>
@@ -320,7 +346,7 @@ export default function Modal_Profile({ show, handleClose, handleOpen, setLogged
                       label="Contraseña *"
                       className="mb-3"
                     >
-                      <Form.Control type="text" name='password' placeholder="" required />
+                      <Form.Control type="text" name='password' placeholder="" defaultValue={logged ? dataProfileLogged.password : ''} required />
                       <Form.Control.Feedback type="invalid">
                         Introduce una contraseña.
                       </Form.Control.Feedback>
@@ -328,7 +354,7 @@ export default function Modal_Profile({ show, handleClose, handleOpen, setLogged
                   </Form.Group>
                   <Form.Group as={Col} md="4">
                     <FloatingLabel controlId="floatingSelect" label="Género">
-                      <Form.Select aria-label="Floating label select example" name='gender' required >
+                      <Form.Select aria-label="Floating label select example" name='gender' defaultValue={logged ? dataProfileLogged.gender : ''} required >
                         <option value="">Selecciona...</option>
                         <option value="Male">Masculino</option>
                         <option value="Female">Femenino</option>
@@ -341,7 +367,7 @@ export default function Modal_Profile({ show, handleClose, handleOpen, setLogged
                   </Form.Group>
                   <Form.Group as={Col} md="4">
                     <FloatingLabel controlId="floatingSelect" label="Nivel educativo">
-                      <Form.Select aria-label="Floating label select example" name='educationLevel' required>
+                      <Form.Select aria-label="Floating label select example" name='educationLevel' defaultValue={logged ? dataProfileLogged.educationLevel : ''} required>
                         <option value="">Selecciona...</option>
                         <option value="Degree">Licenciatura</option>
                         <option value="Master">Maestría</option>
@@ -364,7 +390,7 @@ export default function Modal_Profile({ show, handleClose, handleOpen, setLogged
                 <Row className="mb-3">
                   <Form.Group>
                     <FloatingLabel controlId="floatingSelect" label="¿Consideras que tienes algún grado de conocimiento de robots de servicio? *">
-                      <Form.Select aria-label="Floating label select example" name='knowledgeOfServiceRobots' required >
+                      <Form.Select aria-label="Floating label select example" name='knowledgeOfServiceRobots' defaultValue={logged ? dataLevelLogged.knowledgeOfServiceRobots : ''} required >
                         <option value="">Selecciona...</option>
                         <option value="Yes">Si</option>
                         <option value="No">No</option>
@@ -382,6 +408,7 @@ export default function Modal_Profile({ show, handleClose, handleOpen, setLogged
                         as="textarea"
                         name='reason'
                         placeholder="Leave a comment here"
+                        defaultValue={logged ? dataLevelLogged.reason : ''}
                         style={{ height: '100px' }}
                       />
                     </FloatingLabel>
@@ -390,7 +417,7 @@ export default function Modal_Profile({ show, handleClose, handleOpen, setLogged
                 <Row className="mb-3">
                   <Form.Group controlId="validationCustom01">
                     <FloatingLabel controlId="floatingSelect" label="Nivel de familiaridad *">
-                      <Form.Select aria-label="Floating label select example" name='familiarityLevel' required >
+                      <Form.Select aria-label="Floating label select example" name='familiarityLevel' defaultValue={logged ? dataLevelLogged.familiarityLevel : ''} required >
                         <option value="">Selecciona...</option>
                         <option value="Never seen a virtual or physical service robot">Nunca he visto un robot de servicio virtual o físico</option>
                         <option value="Seen virtual service robots">He visto robots de servicio virtuales</option>
@@ -408,7 +435,7 @@ export default function Modal_Profile({ show, handleClose, handleOpen, setLogged
                 <Row className="mb-3">
                   <Form.Group controlId="validationCustom01">
                     <FloatingLabel controlId="floatingSelect" label="Nivel de conocimiento *">
-                      <Form.Select aria-label="Floating label select example" name='knowledgeLevel' required >
+                      <Form.Select aria-label="Floating label select example" name='knowledgeLevel' defaultValue={logged ? dataLevelLogged.knowledgeLevel : ''} required >
                         <option value="">Selecciona...</option>
                         <option value="Never programmed robots">Nunca he programado robots</option>
                         <option value="Programmed virtual robots">He programado robots virtuales</option>
@@ -436,6 +463,7 @@ export default function Modal_Profile({ show, handleClose, handleOpen, setLogged
                     label="Estoy de acuerdo en que hagamos públicas tus respuestas sin compartir mi nombre."
                     //feedback="Tienes que estar de acuerdo antes de enviar."
                     name='publicAnswers'
+                    defaultChecked={logged ? dataPermissionsLogged.publicAnswers : false}
                   //feedbackType="invalid"
                   />
                 </Form.Group>
@@ -444,6 +472,7 @@ export default function Modal_Profile({ show, handleClose, handleOpen, setLogged
                     label="Estoy de acuerdo en ser contactado para futuros experimentos."
                     //feedback="Tienes que estar de acuerdo antes de enviar."
                     name='contactedForExperiments'
+                    defaultChecked={logged ? dataPermissionsLogged.contactedForExperiments : false}
                   //feedbackType="invalid"
                   />
                 </Form.Group>
@@ -462,7 +491,6 @@ export default function Modal_Profile({ show, handleClose, handleOpen, setLogged
         <Modal.Header closeButton>
           <div className='w-100 pe-3 d-flex justify-content-between'>
             <Modal.Title className='d-flex align-items-center'><User className='me-2' />Iniciar sesión</Modal.Title>
-
           </div>
         </Modal.Header>
         <Modal.Body>
@@ -505,7 +533,5 @@ export default function Modal_Profile({ show, handleClose, handleOpen, setLogged
         </Modal.Body>
       </Modal>
     </>
-
   );
 }
-

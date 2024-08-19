@@ -71,7 +71,8 @@ export default function Simulated_Experiment_Quiz({ setStep, updateSteps, setSte
   return (
     <div>
       <h1>Cuestionario - Experimento Simulado</h1>
-      <div className="mt-5 ps-5 pe-5">
+      <hr />
+      <div className="mt-4 ps-5 pe-5">
         <Form id="quizSimulatedExperiment" noValidate validated={validated} onSubmit={handleSubmit}>
           <Row className="mb-3">
             <Form.Group>

@@ -1,6 +1,6 @@
 // Page: Introduction
 // Author: Eduardo Davila
-// Date: 24/06/2024
+// Date: 31/07/2024
 
 // Importing Libraries
 import { useState } from 'react';
@@ -15,16 +15,16 @@ import VideoIntroduction from '../../assets/Videos/Intro.mp4'
 import { Check } from "@phosphor-icons/react";
 
 export default function Introduction( { setStep , updateSteps , setStepsCompleted } ) {
-  const [completeVideo, setCompleteVideo] = useState(false);
+  const [completeVideo, setCompleteVideo] = useState(false); // State to know if the video has been completed
 
+  // Function to set the step
   const handleSetStep = async () => {
-    const email = JSON.parse(sessionStorage.getItem('profile')).email;
     await axios.post('http://127.0.0.1:4000/API/UpdatePhase', {
-      email: email,
+      email: JSON.parse(sessionStorage.getItem('profile')).email,
       phase: 'Introduction',
       phase_completed: 'Traditional_Experiment_Training'
     }).then((response) => {
-      console.log(response.data);
+      console.log('Phase Updated');
       setStep('Traditional_Experiment_Training');
       updateSteps('Introduction');
       setStepsCompleted('Traditional_Experiment_Training');
@@ -41,18 +41,17 @@ export default function Introduction( { setStep , updateSteps , setStepsComplete
         <ReactPlayer
           url={VideoIntroduction}
           controls={true}
-          muted={true}
+          muted={false}
+          playing={false}
           width='100%'
           height='100%'
-          onEnded={() => setCompleteVideo(true)}
+          onEnded={() => setCompleteVideo(true)} // Setting the state to true when the video ends
         />
       </div>
       <hr />
       <div className='w-100 d-flex justify-content-end gap-4'>
-        <Button
-          className='d-flex align-items-center'
-          variant="success"
-          disabled={!completeVideo}
+        <Button className='d-flex align-items-center' variant="success"
+          disabled={!completeVideo} // Disabling the button if the video has not been completed
           onClick={handleSetStep}
         >
           <Check className='me-2' weight="bold"/>Siguiente

@@ -29,7 +29,7 @@ export default function Simulated_Experiment_Training( { setStep , updateSteps, 
               <ReactPlayer
                 url={VideoIntroduction}
                 controls={true}
-                muted={true}
+                muted={false}
                 width='100%'
                 height='100%'
                 onEnded={() => setCompleteVideo(true)}
